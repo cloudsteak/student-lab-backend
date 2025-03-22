@@ -36,6 +36,10 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
+@app.get("/")
+def root():
+    return {"message": "Student Lab Backend API is up and running 🚀"}
+
 @app.post("/start-lab")
 def start_lab(request: LabRequest, token: dict = Depends(verify_token)):
     username, password = generate_credentials()
