@@ -38,7 +38,7 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
 
 @app.get("/")
 def root():
-    return {"message": "Student Lab Backend API is up and running 🚀"}
+    return {"message": "Student Lab Backend API is up and running"}
 
 @app.post("/start-lab")
 def start_lab(request: LabRequest, token: dict = Depends(verify_token)):
