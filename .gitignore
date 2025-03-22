@@ -175,3 +175,4 @@ cython_debug/
 iac/.terraform/terraform.tfstate
 iac/.terraform/**
 iac/.terraform.lock.hcl
+iac/terraform.tfvars
