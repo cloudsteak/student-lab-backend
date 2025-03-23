@@ -92,7 +92,7 @@ resource "kubernetes_deployment" "lab_backend" {
           }
           env {
             name  = "REDIS_HOST"
-            value = "redis"
+            value = var.redis_host
           }
           env {
             name  = "REDIS_PORT"

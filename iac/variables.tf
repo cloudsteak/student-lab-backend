@@ -56,3 +56,8 @@ variable "lab_ttl_seconds" {
   type    = string
   default = "3600"
 }
+
+
+variable "redis_host" {
+  type = string
+}
