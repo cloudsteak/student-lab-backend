@@ -120,6 +120,7 @@ def lab_status(username: str, token: dict = Depends(verify_token)):
 
 @app.post("/lab-ready")
 async def lab_ready(request: Request):
+    has_permission(token, "notify:lab")
     body = await request.json()
     username = body.get("username")
 
