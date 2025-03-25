@@ -88,7 +88,7 @@ resource "kubernetes_deployment" "lab_backend" {
         }
         container {
           name  = "backend"
-          image = var.image
+          image = "ghcr.io/cloudsteak/lab-backend:latest"
           port {
             container_port = 8000
           }

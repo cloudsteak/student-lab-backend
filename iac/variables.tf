@@ -11,10 +11,6 @@ variable "kubeconfig_context" {
 }
 
 
-variable "image" {
-  description = "Docker image"
-  type        = string
-}
 
 variable "brevo_api_key" {
   type      = string
