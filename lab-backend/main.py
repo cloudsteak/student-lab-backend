@@ -109,7 +109,6 @@ async def start_lab(request: LabRequest, token: dict = Depends(verify_token)):
         "password": password
     }
 
-
 @app.get("/lab-status/all")
 def list_labs(token: dict = Depends(verify_token)):
     has_permission(token, "read:labs")
