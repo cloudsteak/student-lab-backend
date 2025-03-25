@@ -1,8 +1,7 @@
 name: Build & Push Lab Cleanup Trigger
 
 on:
-  pull_request_target:
-    types: [opened, synchronize, reopened, labeled]
+  push:
     branches:
       - 'main'
     paths:
@@ -20,9 +19,6 @@ jobs:
     steps:
       - name: Checkout PR branch
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.ref }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -46,5 +42,5 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: |
-            ghcr.io/cloudsteak/lab-cleanup-trigger:latest
-            ghcr.io/cloudsteak/lab-cleanup-trigger:${{ steps.vars.outputs.SHORT_SHA }}
+            ghcr.io/cloudsteak/student-lab-cleanup-trigger:latest
+            ghcr.io/cloudsteak/student-lab-cleanup-trigger:${{ steps.vars.outputs.SHORT_SHA }}
