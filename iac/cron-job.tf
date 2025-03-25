@@ -57,7 +57,7 @@ resource "kubernetes_cron_job_v1" "lab_cleanup" {
 
             container {
               name              = "lab-cleanup-trigger"
-              image             = "ghcr.io/cloudsteak/student-lab-cleanup-trigger:latest"
+              image             = "ghcr.io/cloudsteak/lab-cleanup-trigger:latest"
               image_pull_policy = "Always"
 
               env {

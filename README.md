@@ -19,7 +19,7 @@ Lásd `.env.example` fájlt.
 
 ## Docker képfájl fordítása helyben:
 ```bash
-docker buildx build --platform linux/amd64 -t ghcr.io/cloudsteak/student-lab-backend:latest .
+docker buildx build --platform linux/amd64 -t ghcr.io/cloudsteak/lab-backend:latest .
 ```
 
 
