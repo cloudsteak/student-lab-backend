@@ -3,7 +3,7 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from .utils import generate_credentials, get_rsa_key
 from .emailer import send_lab_ready_email
-from .models import LabRequest, LabStatus
+from .models import LabRequest, LabStatus, LabReadyRequest
 from redis import Redis
 import os
 import json
@@ -119,10 +119,10 @@ def lab_status(username: str, token: dict = Depends(verify_token)):
     return LabStatus(**lab, ttl_seconds=ttl)
 
 @app.post("/lab-ready")
-async def lab_ready(request: Request):
+async def lab_ready(request: LabReadyRequest, token: dict = Depends(verify_token)):
     has_permission(token, "notify:lab")
-    body = await request.json()
-    username = body.get("username")
+    username = request.username
+    status_value = request.status.lower()
 
     key = f"lab:{username}"
     lab_raw = redis_client.get(key)
@@ -130,11 +130,19 @@ async def lab_ready(request: Request):
         raise HTTPException(status_code=404, detail="Lab not found")
 
     lab_data = json.loads(lab_raw)
+
     if lab_data.get("status") == "ready":
         return {"message": "Lab already marked as ready"}
 
-
     now = datetime.utcnow().isoformat()
+
+    if status_value != "ready":
+        lab_data["status"] = status_value
+        lab_data["error_at"] = now
+        redis_client.setex(key, TTL, json.dumps(lab_data))
+        return {"message": f"Lab {username} reported status: {status_value}"}
+
+    # success case
     lab_data["status"] = "ready"
     lab_data["started_at"] = now
 

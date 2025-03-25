@@ -6,6 +6,10 @@ class LabRequest(BaseModel):
     lab_name: str
     email: EmailStr
 
+class LabReadyRequest(BaseModel):
+    username: str
+    status: str # expected values: "ready", "error", "failed", etc.
+
 class LabStatus(BaseModel):
     lab_name: str
     username: str
