@@ -33,7 +33,7 @@ resource "kubernetes_secret" "lab_secrets" {
 
 resource "kubernetes_secret" "ghcr_auth" {
   metadata {
-    name = "ghcr-auth"
+    name      = "ghcr-auth"
     namespace = kubernetes_namespace.lab_ns.metadata[0].name
   }
   type = "kubernetes.io/dockerconfigjson"
@@ -41,7 +41,7 @@ resource "kubernetes_secret" "ghcr_auth" {
     ".dockerconfigjson" = jsonencode({
       "auths" = {
         "https://ghcr.io" = {
-          "auth" :  base64encode("the1bit:${var.github_token}")
+          "auth" : base64encode("the1bit:${var.github_token}")
         }
       }
     })
@@ -55,7 +55,9 @@ resource "kubernetes_config_map" "lab_config" {
     namespace = kubernetes_namespace.lab_ns.metadata[0].name
   }
   data = {
-    LAB_TTL_SECONDS = var.lab_ttl_seconds
+    LAB_TTL_SECONDS  = var.lab_ttl_seconds
+    PORTAL_AZURE_URL = var.azure_portal_url
+    PORTAL_AWS_URL   = var.aws_portal_url
   }
 }
 
