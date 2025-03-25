@@ -11,6 +11,7 @@ from jose import jwt, JWTError
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import httpx
 from datetime import datetime
+from fastapi.responses import JSONResponse
 
 
 
@@ -108,6 +109,26 @@ async def start_lab(request: LabRequest, token: dict = Depends(verify_token)):
         "password": password
     }
 
+
+@app.get("/lab-status/all")
+def list_labs(token: dict = Depends(verify_token)):
+    has_permission(token, "read:labs")
+
+    keys = redis_client.keys("lab:*")
+    labs = []
+
+    for key in keys:
+        username = key.decode().split(":")[1]
+        lab_raw = redis_client.get(key)
+        if not lab_raw:
+            continue
+        lab_data = json.loads(lab_raw)
+        ttl = redis_client.ttl(key)
+        lab_data["username"] = username
+        lab_data["ttl_seconds"] = ttl
+        labs.append(lab_data)
+
+    return JSONResponse(content={"labs": labs})
 
 @app.get("/lab-status/{username}", response_model=LabStatus)
 def lab_status(username: str, token: dict = Depends(verify_token)):
