@@ -1,4 +1,4 @@
-# --- azure_lab_backend/main.py ---
+# --- lab-backend/main.py ---
 
 from fastapi import FastAPI, Depends, HTTPException, status
 from .utils import generate_credentials, get_rsa_key

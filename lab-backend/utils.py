@@ -1,4 +1,4 @@
-# --- azure_lab_backend/utils.py ---
+# --- lab-backend/utils.py ---
 
 import random
 import string

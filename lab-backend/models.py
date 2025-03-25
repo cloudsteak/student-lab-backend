@@ -1,4 +1,4 @@
-# --- azure_lab_backend/models.py ---
+# --- lab-backend/models.py ---
 
 from pydantic import BaseModel, EmailStr
 
