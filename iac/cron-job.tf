@@ -22,6 +22,23 @@ resource "kubernetes_secret" "cronjob_cleanup_secrets" {
   type = "Opaque"
 }
 
+resource "kubernetes_secret" "ghcr_auth_cron" {
+  metadata {
+    name      = "ghcr-auth"
+    namespace = kubernetes_namespace.cron_ns.metadata[0].name
+  }
+  type = "kubernetes.io/dockerconfigjson"
+  data = {
+    ".dockerconfigjson" = jsonencode({
+      "auths" = {
+        "https://ghcr.io" = {
+          "auth" : base64encode("the1bit:${var.github_token}")
+        }
+      }
+    })
+  }
+}
+
 
 resource "kubernetes_cron_job_v1" "lab_cleanup" {
   metadata {
@@ -53,6 +70,9 @@ resource "kubernetes_cron_job_v1" "lab_cleanup" {
           }
 
           spec {
+            image_pull_secrets {
+              name = kubernetes_secret.ghcr_auth_cron.metadata[0].name
+            }
             restart_policy = "OnFailure"
 
             container {

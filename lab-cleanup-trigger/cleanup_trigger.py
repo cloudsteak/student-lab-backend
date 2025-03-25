@@ -35,7 +35,12 @@ def cleanup_expired_labs():
 
     response = httpx.get(LAB_STATUS_ENDPOINT, headers=headers)
     response.raise_for_status()
-    labs = response.json()
+    labs_data = response.json()
+    labs = labs_data.get("labs", [])
+    
+    if not isinstance(labs, list):
+    print("Invalid response format:", labs_data)
+    exit(1)
 
     for lab in labs:
         if lab["status"] == "expired":
