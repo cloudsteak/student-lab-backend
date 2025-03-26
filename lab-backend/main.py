@@ -91,6 +91,7 @@ async def start_lab(request: LabRequest, token: dict = Depends(verify_token)):
     
     lab_data = {
         "lab_name": request.lab_name,
+        "cloud_provider": request.cloud_provider,
         "username": username,
         "password": password,
         "email": request.email,
@@ -166,7 +167,7 @@ async def lab_ready(request: LabReadyRequest, token: dict = Depends(verify_token
     lab_data["status"] = "ready"
     lab_data["started_at"] = now
 
-    send_lab_ready_email(username, lab_data["password"], lab_data["email"])
+    send_lab_ready_email(username, lab_data["password"], lab_data["email"], cloud_provider=lab_data["cloud_provider"])
     redis_client.setex(key, TTL, json.dumps(lab_data))
 
     return {"message": f"Lab {username} marked as ready and email sent"}
