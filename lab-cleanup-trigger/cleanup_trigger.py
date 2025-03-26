@@ -39,8 +39,8 @@ def cleanup_expired_labs():
     labs = labs_data.get("labs", [])
     
     if not isinstance(labs, list):
-    print("Invalid response format:", labs_data)
-    exit(1)
+        print("Invalid response format:", labs_data)
+        exit(1)
 
     for lab in labs:
         if lab["status"] == "expired":
