@@ -4,6 +4,7 @@ from pydantic import BaseModel, EmailStr
 
 class LabRequest(BaseModel):
     lab_name: str
+    cloud_provider: str
     email: EmailStr
 
 class LabReadyRequest(BaseModel):
