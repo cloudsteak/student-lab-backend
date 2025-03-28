@@ -13,9 +13,6 @@ import httpx
 from datetime import datetime
 from fastapi.responses import JSONResponse
 
-
-
-
 app = FastAPI(docs_url="/docs", redoc_url=None)
 security = HTTPBearer()
 
@@ -98,7 +95,7 @@ async def start_lab(request: LabRequest, token: dict = Depends(verify_token)):
         "status": "pending"
     }
 
-    # Store lab metadata (no TTL yet!)
+    # Store lab metadata (no TTL!)
     redis_client.set(f"lab:{username}", json.dumps(lab_data))
 
     # Trigger GitHub Actions
@@ -136,7 +133,12 @@ def lab_status(username: str, token: dict = Depends(verify_token)):
     if not lab_raw:
         raise HTTPException(status_code=404, detail="Lab not found")
     lab = json.loads(lab_raw)
-    ttl = redis_client.ttl(f"lab:{username}")
+
+    ttl = 0
+    if "started_at" in lab:
+        started = datetime.fromisoformat(lab["started_at"])
+        ttl = max(0, TTL - int((datetime.utcnow() - started).total_seconds()))
+
     return LabStatus(**lab, ttl_seconds=ttl)
 
 @app.post("/lab-ready")
@@ -160,7 +162,7 @@ async def lab_ready(request: LabReadyRequest, token: dict = Depends(verify_token
     if status_value != "ready":
         lab_data["status"] = status_value
         lab_data["error_at"] = now
-        redis_client.setex(key, TTL, json.dumps(lab_data))
+        redis_client.set(key, json.dumps(lab_data))
         return {"message": f"Lab {username} reported status: {status_value}"}
 
     # success case
@@ -168,6 +170,6 @@ async def lab_ready(request: LabReadyRequest, token: dict = Depends(verify_token
     lab_data["started_at"] = now
 
     send_lab_ready_email(username, lab_data["password"], lab_data["email"], cloud_provider=lab_data["cloud_provider"])
-    redis_client.setex(key, TTL, json.dumps(lab_data))
+    redis_client.set(key, json.dumps(lab_data))
 
     return {"message": f"Lab {username} marked as ready and email sent"}
