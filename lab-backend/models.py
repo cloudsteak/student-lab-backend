@@ -16,3 +16,6 @@ class LabStatus(BaseModel):
     username: str
     password: str
     ttl_seconds: int
+
+class LabDeleteRequest(BaseModel):
+    username: str
