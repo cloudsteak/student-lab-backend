@@ -28,6 +28,11 @@ def send_lab_ready_email(username: str, password: str, recipient: str, cloud_pro
     html_content = f"""
     <p>Szia <b>{username}</b>!</p>
     <p>A lab környezeted elkészült. <a href='{cloud_console_url}' target='_blank'>Webes bejelentkezés ({cloud_provider}) itt</a>.</p>
+    {cloud_console_url}
+    Linkek:
+    {os.getenv("PORTAL_AZURE_URL")}
+    {os.getenv("PORTAL_AWS_URL")}
+    {os.getenv("LAB_TTL_SECONDS")}
     <p><b>Felhasználónév:</b> {username}<br><b>Jelszó:</b> {password}</p>
     <p>A lab 60 perc múlva automatikusan törlődik.</p>
     
