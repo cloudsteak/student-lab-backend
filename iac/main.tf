@@ -112,7 +112,27 @@ resource "kubernetes_deployment" "lab_backend" {
                 key  = "LAB_TTL_SECONDS"
               }
             }
+
           }
+          env {
+            name = "PORTAL_AWS_URL"
+            value_from {
+              config_map_key_ref {
+                name = kubernetes_config_map.lab_config.metadata[0].name
+                key  = "PORTAL_AWS_URL"
+              }
+            }
+          }
+          env {
+            name = "PORTAL_AZURE_URL"
+            value_from {
+              config_map_key_ref {
+                name = kubernetes_config_map.lab_config.metadata[0].name
+                key  = "PORTAL_AZURE_URL"
+              }
+            }
+          }
+
           env {
             name = "BREVO_API_KEY"
             value_from {
