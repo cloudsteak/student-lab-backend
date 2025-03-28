@@ -9,6 +9,9 @@ def send_lab_ready_email(username: str, password: str, recipient: str, cloud_pro
     configuration.api_key["api-key"] = os.getenv("BREVO_API_KEY")
     azure_portal_url = os.getenv("PORTAL_AZURE_URL")
     aws_portal_url = os.getenv("PORTAL_AWS_URL")
+    print("Linkek az e-mailhez:")
+    print(azure_portal_url)
+    print(aws_portal_url)
     cloud_console_url = ""
     if cloud_provider == "azure":
         cloud_console_url = azure_portal_url
