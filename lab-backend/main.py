@@ -3,7 +3,7 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from .utils import generate_credentials, get_rsa_key
 from .emailer import send_lab_ready_email
-from .models import LabRequest, LabStatus, LabReadyRequest
+from .models import LabRequest, LabStatus, LabReadyRequest, LabDeleteRequest
 from redis import Redis
 import os
 import json
@@ -173,3 +173,40 @@ async def lab_ready(request: LabReadyRequest, token: dict = Depends(verify_token
     redis_client.set(key, json.dumps(lab_data))
 
     return {"message": f"Lab {username} marked as ready and email sent"}
+
+
+@app.post("/lab-delete-internal")
+def delete_lab_internal(request: LabDeleteRequest, token: dict = Depends(verify_token)):
+    has_permission(token, "delete:lab")
+
+    key = f"lab:{request.username}"
+    result = redis_client.delete(key)
+
+    if result == 1:
+        return {"message": f"Redis key '{key}' deleted successfully"}
+    else:
+        raise HTTPException(status_code=404, detail=f"Redis key '{key}' not found")
+
+
+@app.post("/clean-up-lab")
+async def clean_up_lab(request: LabDeleteRequest, token: dict = Depends(verify_token)):
+    has_permission(token, "delete:lab")
+
+    key = f"lab:{request.username}"
+    lab_raw = redis_client.get(key)
+    if not lab_raw:
+        raise HTTPException(status_code=404, detail="Lab not found")
+
+    lab = json.loads(lab_raw)
+
+    if "password" not in lab or "lab_name" not in lab:
+        raise HTTPException(status_code=500, detail="Lab data is incomplete in Redis")
+
+    await trigger_github_workflow(
+        username=request.username,
+        password="dummy",
+        lab=lab["lab_name"],
+        action="destroy"
+    )
+
+    return {"message": f"Destroy action triggered for {request.username}"}
