@@ -50,8 +50,6 @@ def is_expired(lab):
 
     if status == "ready":
         expiry_time = started_at + timedelta(seconds=ttl_seconds)
-    else:
-        expiry_time = started_at + timedelta(seconds=ttl_seconds * 2)
 
     return now >= expiry_time
 
