@@ -1,9 +1,16 @@
 <?php
 /*
-Plugin Name: Lab Launcher
-Description: WordPress plugin a CloudMentor lab indításhoz.
-Version: 0.0.3
+Plugin Name: CloudMentor Lab Launcher
+Description: WordPress plugin a CloudMentor Lab indításhoz (Azure, AWS).
+Version: 0.0.5
 Author: CloudMentor
+Author URI: https://cloudmentor.hu
+License: MIT
+License URI: https://opensource.org/licenses/MIT
+Requires at least: 6.7
+Tested up to: 6.7
+Requires PHP: 8.1
+
 */
 
 // Beillesztés: admin oldal, REST API, shortcode, beállítások

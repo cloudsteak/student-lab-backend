@@ -5,8 +5,8 @@ add_action('admin_menu', 'lab_launcher_lab_menu');
 function lab_launcher_lab_menu()
 {
     add_menu_page(
-        'Labok kezelése',
-        'Labok',
+        'Cloud Lab kezelő',
+        'Cloud Lab kezelő',
         'manage_options',
         'lab-launcher-labs',
         'lab_launcher_labs_page',
