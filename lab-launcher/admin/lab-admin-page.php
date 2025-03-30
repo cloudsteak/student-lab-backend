@@ -2,7 +2,8 @@
 // admin/lab-admin-page.php
 
 add_action('admin_menu', 'lab_launcher_lab_menu');
-function lab_launcher_lab_menu() {
+function lab_launcher_lab_menu()
+{
     add_menu_page(
         'Labok kezelése',
         'Labok',
@@ -14,7 +15,8 @@ function lab_launcher_lab_menu() {
     );
 }
 
-function lab_launcher_labs_page() {
+function lab_launcher_labs_page()
+{
     if (!current_user_can('manage_options')) {
         return;
     }
@@ -48,8 +50,12 @@ function lab_launcher_labs_page() {
                     <td><input name="lab_name" type="text" required class="regular-text"></td>
                 </tr>
                 <tr>
-                    <th scope="row"><label for="cloud_provider">Cloud provider</label></th>
-                    <td><input name="cloud_provider" type="text" required class="regular-text"></td>
+                    <th scope="row"><label for="cloud_provider">Felhő szolgáltató</label></th>
+                    <td><select name="cloud_provider" required class="regular-text">
+                            <option value="aws">AWS</option>
+                            <option value="azure">Azure</option>
+                        </select>
+                    </td>
                 </tr>
                 <tr>
                     <th scope="row"><label for="description">Leírás</label></th>
@@ -68,27 +74,27 @@ function lab_launcher_labs_page() {
         </form>
     </div>
     <script>
-    jQuery(document).ready(function($){
-        let frame;
-        $('#upload_image_button').on('click', function(e){
-            e.preventDefault();
-            if (frame) {
+        jQuery(document).ready(function ($) {
+            let frame;
+            $('#upload_image_button').on('click', function (e) {
+                e.preventDefault();
+                if (frame) {
+                    frame.open();
+                    return;
+                }
+                frame = wp.media({
+                    title: 'Válassz egy képet',
+                    button: { text: 'Használat' },
+                    multiple: false
+                });
+                frame.on('select', function () {
+                    const attachment = frame.state().get('selection').first().toJSON();
+                    $('#lab_image_id').val(attachment.id);
+                    $('#image_preview').html('<img src="' + attachment.url + '" style="max-width: 300px; height: auto;">');
+                });
                 frame.open();
-                return;
-            }
-            frame = wp.media({
-                title: 'Válassz egy képet',
-                button: { text: 'Használat' },
-                multiple: false
             });
-            frame.on('select', function() {
-                const attachment = frame.state().get('selection').first().toJSON();
-                $('#lab_image_id').val(attachment.id);
-                $('#image_preview').html('<img src="' + attachment.url + '" style="max-width: 300px; height: auto;">');
-            });
-            frame.open();
         });
-    });
     </script>
     <?php
 }

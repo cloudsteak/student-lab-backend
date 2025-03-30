@@ -48,3 +48,10 @@ function lab_launcher_call_backend($payload) {
 
     return json_decode(wp_remote_retrieve_body($backend_response), true);
 }
+
+// E-mail elmentése globálisan INIT alatt
+add_action('init', function () {
+    global $lab_launcher_user_email;
+    $current_user = wp_get_current_user();
+    $lab_launcher_user_email = sanitize_email($current_user->user_email);
+});
