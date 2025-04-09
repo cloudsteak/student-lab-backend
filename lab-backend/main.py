@@ -173,6 +173,8 @@ async def lab_ready(request: LabReadyRequest, token: dict = Depends(verify_token
     # success case
     lab_data["status"] = "ready"
     lab_data["started_at"] = now
+    lab_data["ttl_seconds"] = TTL
+    
 
     send_lab_ready_email(username, lab_data["password"], lab_data["email"], cloud_provider=lab_data["cloud_provider"])
     redis_client.set(key, json.dumps(lab_data))
