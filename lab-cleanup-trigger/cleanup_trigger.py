@@ -18,7 +18,7 @@ DELETE_REDIS_ENDPOINT = f"{BACKEND_URL}/lab-delete-internal"
 
 
 logging.basicConfig(level=logging.INFO)
-TIMEOUT = 10  # seconds
+TIMEOUT = 30  # seconds
 
 def get_auth_token():
     url = f"https://{AUTH0_DOMAIN}/oauth/token"
@@ -35,6 +35,7 @@ def get_auth_token():
 def is_expired(lab):
     started_at_str = lab.get("started_at")
     ttl_seconds = lab.get("ttl_seconds", 3600)
+    logging.info(f'TTL seconds: {ttl_seconds}')
     status = lab.get("status", "ready")
 
     if not started_at_str:
@@ -42,6 +43,7 @@ def is_expired(lab):
 
     try:
         started_at = datetime.fromisoformat(started_at_str).replace(tzinfo=timezone.utc)
+        logging.info(f'Started at: {started_at}')
     except Exception as e:
         logging.error(f"Invalid started_at for {lab.get('username')}: {started_at_str} - {e}")
         return False
@@ -50,7 +52,8 @@ def is_expired(lab):
 
     if status == "ready":
         expiry_time = started_at + timedelta(seconds=ttl_seconds)
-
+        
+    logging.info(f'Expiry time: {expiry_time}')
     return now >= expiry_time
 
 def cleanup_expired_labs():
@@ -68,6 +71,7 @@ def cleanup_expired_labs():
 
     for lab in labs:
         username = lab.get("username")
+        logging.info(f"User: {username} - Lab started:{lab.get('started_at')}")
         if is_expired(lab):
             logging.info(f"[EXPIRED] Cleaning up lab {username} (status: {lab.get('status')})")
             res = httpx.post(CLEANUP_ENDPOINT, headers=headers, json={"username": username}, timeout=TIMEOUT)
