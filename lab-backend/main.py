@@ -211,7 +211,7 @@ async def clean_up_lab(request: LabDeleteRequest, token: dict = Depends(verify_t
         username=request.username,
         password="dummy",
         lab=lab["lab_name"],
-        action="destroy"
+        action="destroy",
         cloud_provider=lab["cloud_provider"]
     )
 
