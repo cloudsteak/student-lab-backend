@@ -12,6 +12,7 @@ def send_lab_ready_email(username: str, password: str, recipient: str, cloud_pro
     cloud_console_url = ""
     if cloud_provider == "azure":
         cloud_console_url = azure_portal_url
+        username = username + "@cloudsteak.com"
     elif cloud_provider == "aws":
         cloud_console_url = aws_portal_url
         
