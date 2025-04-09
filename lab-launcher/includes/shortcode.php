@@ -103,7 +103,7 @@ function lab_launcher_enqueue_script()
                     const res = await fetch('/wp-json/lab-launcher/v1/start-lab', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        credentials: 'same-origin', // ✅ EZ A KULCS!
+                        credentials: 'same-origin',
                         body: JSON.stringify({
                             lab_name: labName,
                             cloud_provider: cloudProvider
@@ -114,7 +114,12 @@ function lab_launcher_enqueue_script()
                     console.log('Backend response:', data);
 
                     if (res.ok) {
-                        resultBox.innerHTML = `<strong>Felhasználónév:</strong> ${data.username}<br><strong>Jelszó:</strong> ${data.password}<p>Hamarosan megkapod az e-mailt a lab indításáról.</p>`;
+                        let username = data.username;
+                        if (cloudProvider === 'azure'){
+                            username = username + '@cloudsteak.com';
+                        }
+
+                        resultBox.innerHTML = `<strong>Felhasználónév:</strong> ${username}<br><strong>Jelszó:</strong> ${data.password}<p>Hamarosan értesítést kapsz a gyakorló környezet állapotáról.</p>`;
                     } else {
                         resultBox.innerHTML = `<span style='color:red;'>Hiba: ${data.message || 'Ismeretlen'}</span>`;
                     }

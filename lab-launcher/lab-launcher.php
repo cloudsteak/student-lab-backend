@@ -2,7 +2,7 @@
 /*
 Plugin Name: CloudMentor Lab Launcher
 Description: WordPress plugin a CloudMentor Lab indításhoz (Azure, AWS).
-Version: 0.0.5
+Version: 0.0.6
 Author: CloudMentor
 Author URI: https://cloudmentor.hu
 License: MIT
