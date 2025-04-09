@@ -61,7 +61,7 @@ variable "github_workflow_filename" {
 
 variable "lab_ttl_seconds" {
   type    = string
-  default = "3600"
+  default = "5000"
 }
 
 

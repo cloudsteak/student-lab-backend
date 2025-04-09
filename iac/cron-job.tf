@@ -50,7 +50,7 @@ resource "kubernetes_cron_job_v1" "lab_cleanup" {
   }
 
   spec {
-    schedule                      = "*/10 * * * *"
+    schedule                      = "*/30 * * * *"
     successful_jobs_history_limit = 1
     failed_jobs_history_limit     = 1
 
