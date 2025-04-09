@@ -24,9 +24,9 @@ redis_client = Redis(
 
 TTL = int(os.getenv("LAB_TTL_SECONDS", 3600))
 
-async def trigger_github_workflow(username: str, password: str, lab: str = "basic", action: str = "apply"):
+async def trigger_github_workflow(username: str, password: str, lab: str = "basic", action: str = "apply", cloud_provider: str = "aws"):
     repo = os.getenv("GITHUB_REPO")
-    workflow_filename = os.getenv("GITHUB_WORKFLOW_FILENAME")
+    workflow_filename = cloud_provider + os.getenv("GITHUB_WORKFLOW_FILENAME")
     github_token = os.getenv("GITHUB_TOKEN")
 
     url = f"https://api.github.com/repos/{repo}/actions/workflows/{workflow_filename}/dispatches"
@@ -98,8 +98,13 @@ async def start_lab(request: LabRequest, token: dict = Depends(verify_token)):
     # Store lab metadata (no TTL!)
     redis_client.set(f"lab:{username}", json.dumps(lab_data))
 
-    # Trigger GitHub Actions
-    await trigger_github_workflow(username, password, request.lab_name)
+    # Trigger GitHub Actions - Apply
+    await trigger_github_workflow(
+        username=username, 
+        password=password, 
+        lab=request.lab_name, 
+        action="apply", 
+        cloud_provider=request.cloud_provider)
 
     return {
         "message": "Lab started",
@@ -207,6 +212,7 @@ async def clean_up_lab(request: LabDeleteRequest, token: dict = Depends(verify_t
         password="dummy",
         lab=lab["lab_name"],
         action="destroy"
+        cloud_provider=lab["cloud_provider"]
     )
 
     return {"message": f"Destroy action triggered for {request.username}"}

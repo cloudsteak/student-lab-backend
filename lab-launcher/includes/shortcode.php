@@ -3,7 +3,8 @@
 
 add_shortcode('lab_launcher', 'lab_launcher_render_shortcode');
 
-function lab_launcher_render_shortcode($atts) {
+function lab_launcher_render_shortcode($atts)
+{
     $atts = shortcode_atts(array(
         'id' => 0,
     ), $atts);
@@ -53,12 +54,15 @@ function lab_launcher_render_shortcode($atts) {
 
 // Shortcode lista admin oldalon lab törléssel
 add_action('admin_notices', 'lab_launcher_shortcode_list_notice');
-function lab_launcher_shortcode_list_notice() {
+function lab_launcher_shortcode_list_notice()
+{
     $screen = get_current_screen();
-    if ($screen->id !== 'toplevel_page_lab-launcher-labs') return;
+    if ($screen->id !== 'toplevel_page_lab-launcher-labs')
+        return;
 
     $labs = get_option('lab_launcher_labs', []);
-    if (empty($labs)) return;
+    if (empty($labs))
+        return;
 
     echo '<div class="notice notice-info"><p><strong>Elérhető shortcode-ok:</strong><br>';
     foreach ($labs as $index => $lab) {
@@ -83,32 +87,47 @@ function lab_launcher_shortcode_list_notice() {
     }
 }
 
-function lab_launcher_enqueue_script() {
+function lab_launcher_enqueue_script()
+{
     ?>
     <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        document.querySelectorAll('.lab-start-button').forEach(button => {
-            button.addEventListener('click', async () => {
-                const labName = button.dataset.labName;
-                const cloudProvider = button.dataset.cloudProvider;
-                const resultBox = button.nextElementSibling;
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.lab-start-button').forEach(button => {
+                button.addEventListener('click', async () => {
+                    const labName = button.dataset.labName;
+                    const cloudProvider = button.dataset.cloudProvider;
+                    const resultBox = button.nextElementSibling;
 
-                const res = await fetch('/wp-json/lab-launcher/v1/start-lab', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'same-origin',
-                    body: JSON.stringify({ lab_name: labName, cloud_provider: cloudProvider })
+                    console.log('Küldés indítása:', { labName, cloudProvider });
+
+                    const res = await fetch('/wp-json/lab-launcher/v1/start-lab', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({
+                            lab_name: labName,
+                            cloud_provider: cloudProvider
+                        })
+                    });
+
+                    const data = await res.json();
+                    console.log('Backend response:', data);
+
+                    if (res.ok) {
+                        let username = data.username;
+                        if (cloudProvider === 'azure'){
+                            username = username + '@cloudsteak.com';
+                        }
+
+                        resultBox.innerHTML = `<strong>Felhasználónév:</strong> ${username}<br><strong>Jelszó:</strong> ${data.password}<p>Hamarosan értesítést kapsz a gyakorló környezet állapotáról.</p>`;
+                    } else {
+                        resultBox.innerHTML = `<span style='color:red;'>Hiba: ${data.message || 'Ismeretlen'}</span>`;
+                    }
                 });
-
-                const data = await res.json();
-                if (res.ok) {
-                    resultBox.innerHTML = `<strong>Felhasználónév:</strong> ${data.username}<br><strong>Jelszó:</strong> ${data.password}`;
-                } else {
-                    resultBox.innerHTML = `<span style='color:red;'>Hiba: ${data.message || 'Ismeretlen'}</span>`;
-                }
             });
         });
-    });
     </script>
     <?php
 }
+
+

@@ -4,8 +4,8 @@
 add_action('admin_menu', 'lab_launcher_settings_menu');
 function lab_launcher_settings_menu() {
     add_options_page(
-        'Lab Launcher Beállítások',
-        'Lab Launcher',
+        'Cloud Lab Beállítások',
+        'Cloud Lab Beállítások',
         'manage_options',
         'lab-launcher-settings',
         'lab_launcher_settings_page'
