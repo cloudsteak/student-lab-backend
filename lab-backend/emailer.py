@@ -22,8 +22,8 @@ def send_lab_ready_email(username: str, password: str, recipient: str, cloud_pro
     sender = {"name": "CloudMentor", "email": os.getenv("EMAIL_SENDER")}
     to = [{"email": recipient}]
     html_content = f"""
-    <p>Szia <b>{username}</b>!</p>
-    <p>A lab környezeted elkészült. Kattinnts <a href='{cloud_console_url}' target='_blank'>ide a webes bejelentkezéshez ({cloud_provider.upper()})</a>.</p>
+    <p>Helló!</p>
+    <p>A gyakorló környezeted elkészült. Kattinnts <a href='{cloud_console_url}' target='_blank'>ide a webes bejelentkezéshez</a>.</p>
     <p><b>Felhasználónév:</b> {username}<br><b>Jelszó:</b> {password}</p>
     <p><strong>A lab {int(os.getenv("LAB_TTL_SECONDS"))/60} perc múlva automatikusan törlődik.</strong></p>
     
