@@ -52,8 +52,6 @@ def is_expired(lab):
 
     if status == "ready":
         expiry_time = started_at + timedelta(seconds=ttl_seconds)
-    elif status == "pending":
-        return True
     elif status == "failed":
         expiry_time = started_at + timedelta(seconds=14400)
     
