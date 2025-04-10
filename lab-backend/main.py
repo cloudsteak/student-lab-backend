@@ -129,6 +129,7 @@ def list_labs(token: dict = Depends(verify_token)):
         print(f"Lab {username} - TTL: {ttl}")
         lab_data["username"] = username
         lab_data["ttl_seconds"] = ttl
+        lab_data["ttl_in_seconds"] = TTL
         labs.append(lab_data)
 
     return JSONResponse(content={"labs": labs})
@@ -173,8 +174,7 @@ async def lab_ready(request: LabReadyRequest, token: dict = Depends(verify_token
 
     # success case
     lab_data["status"] = "ready"
-    lab_data["started_at"] = now
-    lab_data["ttl_seconds"] = ttl
+    lab_data["started_at"] = now 
     lab_data["ttl_in_seconds"] = TTL
     
 
