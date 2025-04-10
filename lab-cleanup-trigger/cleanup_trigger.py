@@ -52,8 +52,11 @@ def is_expired(lab):
 
     if status == "ready":
         expiry_time = started_at + timedelta(seconds=ttl_seconds)
-        
-    logging.info(f'Expiry time: {expiry_time}')
+    elif status == "pending":
+        return True
+    elif status == "failed":
+        expiry_time = started_at + timedelta(seconds=14400)
+    
     return now >= expiry_time
 
 def cleanup_expired_labs():

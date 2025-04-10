@@ -175,7 +175,6 @@ async def lab_ready(request: LabReadyRequest, token: dict = Depends(verify_token
     # success case
     lab_data["status"] = "ready"
     lab_data["started_at"] = now 
-    lab_data["ttl"] = TTL
     lab_data["ttl_in_seconds"] = TTL
     
 
