@@ -126,7 +126,7 @@ def list_labs(token: dict = Depends(verify_token)):
             continue
         lab_data = json.loads(lab_raw)
         ttl = redis_client.ttl(key)
-        logging.info(f"Lab {username} TTL: {ttl}")
+        print(f"Lab {username} - TTL: {ttl}")
         lab_data["username"] = username
         lab_data["ttl_seconds"] = ttl
         labs.append(lab_data)
