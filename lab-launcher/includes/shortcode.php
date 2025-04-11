@@ -6,20 +6,14 @@ add_shortcode('lab_launcher', 'lab_launcher_render_shortcode');
 function lab_launcher_render_shortcode($atts)
 {
     $atts = shortcode_atts(array(
-        'id' => 0,
+        'id' => '',
+        'lab' => '',
+        'cloud' => '',
+        'lab_ttl' => '3600'
     ), $atts);
 
     $labs = get_option('lab_launcher_labs', []);
 
-    // Ha az 'id' nem numerikus, akkor keressük meg a lab nevét
-    if (!is_numeric($atts['id'])) {
-        foreach ($labs as $i => $lab) {
-            if ($lab['lab_name'] === $atts['id']) {
-                $atts['id'] = $i;
-                break;
-            }
-        }
-    }
 
     $index = intval($atts['id']);
 
@@ -39,7 +33,20 @@ function lab_launcher_render_shortcode($atts)
         }
 
         $output .= '<div class="lab-description">' . wp_kses_post($lab['description']) . '</div>';
-        $output .= '<button class="lab-start-button" data-lab-name="' . esc_attr($lab['lab_name']) . '" data-cloud-provider="' . esc_attr($lab['cloud_provider']) . '">Lab indítása</button>';
+        $output .= '<div class="lab-launcher-box">';
+        $output .= '  <div class="lab-launcher" 
+                    data-id="' . esc_attr($atts['id']) . '" 
+                    data-lab="' . esc_attr($atts['lab']) . '" 
+                    data-cloud="' . esc_attr($atts['cloud']) . '" 
+                    data-lab-ttl="' . esc_attr($atts['lab_ttl']) . '">';
+        $output .= '    <p><strong>Lab:</strong> ' . esc_html($atts['lab']) . ' (' . strtoupper($atts['cloud']) . ')</p>';
+
+        $output .= '    <button class="lab-launch-button">Lab indítása</button>';
+        $output .= '    <div class="lab-status"></div>';
+        $output .= '  </div>';
+        $output .= '</div>';
+
+
         $output .= '<div class="lab-result" style="margin-top:10px;"></div>';
         $output .= '</div>';
 
@@ -115,7 +122,7 @@ function lab_launcher_enqueue_script()
 
                     if (res.ok) {
                         let username = data.username;
-                        if (cloudProvider === 'azure'){
+                        if (cloudProvider === 'azure') {
                             username = username + '@cloudsteak.com';
                         }
 
