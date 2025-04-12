@@ -29,8 +29,10 @@ function lab_launcher_text_field($args) {
     $options = get_option('lab_launcher_settings');
     $name = $args['name'];
     $value = esc_attr($options[$name] ?? '');
-    echo "<input type='text' name='lab_launcher_settings[$name]' value='$value' class='regular-text' />";
+    $type = ($name === 'auth0_client_secret') ? 'password' : 'text';
+    echo "<input type='$type' name='lab_launcher_settings[$name]' value='$value' class='regular-text' />";
 }
+
 
 function lab_launcher_settings_page() {
     echo '<div class="wrap">';

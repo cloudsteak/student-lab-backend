@@ -6,26 +6,20 @@ add_shortcode('lab_launcher', 'lab_launcher_render_shortcode');
 function lab_launcher_render_shortcode($atts)
 {
     $atts = shortcode_atts(array(
-        'id' => '',
-        'lab' => '',
-        'cloud' => '',
-        'lab_ttl' => '3600'
+        'id' => ''
     ), $atts);
 
     $labs = get_option('lab_launcher_labs', []);
+    $id = $atts['id'];
 
-
-    $index = intval($atts['id']);
-
-    if (!isset($labs[$index])) {
-        return '<p>Lab nem található.</p>';
+    if (!isset($labs[$id])) {
+        return '<p>Hiba: Nem található a megadott lab azonosító.</p>';
     }
 
-    $lab = $labs[$index];
+    $lab = $labs[$id];
     $output = '';
 
     if (is_user_logged_in()) {
-        $output .= '<div class="lab-launcher-box">';
 
         if (!empty($lab['image_id'])) {
             $image_url = wp_get_attachment_image_url($lab['image_id'], 'medium');
@@ -35,19 +29,16 @@ function lab_launcher_render_shortcode($atts)
         $output .= '<div class="lab-description">' . wp_kses_post($lab['description']) . '</div>';
         $output .= '<div class="lab-launcher-box">';
         $output .= '  <div class="lab-launcher" 
-                    data-id="' . esc_attr($atts['id']) . '" 
-                    data-lab="' . esc_attr($atts['lab']) . '" 
-                    data-cloud="' . esc_attr($atts['cloud']) . '" 
-                    data-lab-ttl="' . esc_attr($atts['lab_ttl']) . '">';
-        $output .= '    <p><strong>Lab:</strong> ' . esc_html($atts['lab']) . ' (' . strtoupper($atts['cloud']) . ')</p>';
+                    data-id="' . esc_attr($id) . '"
+                    data-lab="' . esc_attr($lab['lab_name']) . '" 
+                    data-cloud="' . esc_attr($lab['cloud']) . '" 
+                    data-lab-ttl="' . esc_attr($lab['lab_ttl']) . '">';
+        $output .= '    <p><strong>Lab:</strong> ' . esc_html($lab['lab_name']) . ' (' . strtoupper($lab['cloud']) . ')</p>';
 
-        $output .= '    <button class="lab-launch-button">Lab indítása</button>';
+        $output .= '    <button class="lab-launch-button">Lab indítása <i class="fa-solid fa-play"></i></button>';
         $output .= '    <div class="lab-status"></div>';
+        $output .= '    <div class="lab-result" style="margin-top:10px;"></div>';
         $output .= '  </div>';
-        $output .= '</div>';
-
-
-        $output .= '<div class="lab-result" style="margin-top:10px;"></div>';
         $output .= '</div>';
 
         // Inline JS betöltése
@@ -73,21 +64,21 @@ function lab_launcher_shortcode_list_notice()
 
     echo '<div class="notice notice-info"><p><strong>Elérhető shortcode-ok:</strong><br>';
     foreach ($labs as $index => $lab) {
-        echo '[lab_launcher id="' . esc_html($lab['lab_name']) . '"] ';
+        echo '[lab_launcher id="' . esc_html($lab['id']) . '"] ';
+        echo '<a href="' . esc_url(admin_url('admin.php?page=lab-launcher-labs&edit_lab=' . urlencode($lab['id']))) . '" class="button button-small">Szerkesztés</a>';
         echo '<form method="post" style="display:inline; margin-left:10px;">
-            <input type="hidden" name="lab_launcher_delete_index" value="' . esc_attr($index) . '" />
-            ' . wp_nonce_field('lab_launcher_delete_lab', '_wpnonce', true, false) . '
-            <input type="submit" class="button button-small" value="Törlés" onclick="return confirm(\'Biztosan törölni szeretnéd ezt a labot?\')">
+        <input type="hidden" name="lab_launcher_delete_index" value="' . esc_attr($lab['id']) . '" />
+        ' . wp_nonce_field('lab_launcher_delete_lab', '_wpnonce', true, false) . '
+        <input type="submit" class="button button-small" value="Törlés" onclick="return confirm(\'Biztosan törölni szeretnéd ezt a labot?\')">
         </form><br>';
     }
     echo '</p></div>';
 
     // Törlés feldolgozása
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['lab_launcher_delete_index']) && check_admin_referer('lab_launcher_delete_lab')) {
-        $index = intval($_POST['lab_launcher_delete_index']);
+        $index = sanitize_text_field($_POST['lab_launcher_delete_index']);
         if (isset($labs[$index])) {
             unset($labs[$index]);
-            $labs = array_values($labs); // újraindexelés
             update_option('lab_launcher_labs', $labs);
             echo '<div class="updated"><p>Lab sikeresen törölve.</p></div>';
         }
@@ -99,36 +90,63 @@ function lab_launcher_enqueue_script()
     ?>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            document.querySelectorAll('.lab-start-button').forEach(button => {
+            document.querySelectorAll('.lab-launch-button').forEach(button => {
                 button.addEventListener('click', async () => {
-                    const labName = button.dataset.labName;
-                    const cloudProvider = button.dataset.cloudProvider;
-                    const resultBox = button.nextElementSibling;
+                    const launcher = button.closest('.lab-launcher');
+                    const labName = launcher.dataset.lab;
+                    const cloudProvider = launcher.dataset.cloud;
+                    const labTTL = launcher.dataset.labTtl;
+                    const resultBox = launcher.querySelector('.lab-result') || launcher.nextElementSibling;
 
-                    console.log('Küldés indítása:', { labName, cloudProvider });
+                    console.log('Küldés indítása:', { labName, cloudProvider, labTTL });
 
-                    const res = await fetch('/wp-json/lab-launcher/v1/start-lab', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        credentials: 'same-origin',
-                        body: JSON.stringify({
-                            lab_name: labName,
-                            cloud_provider: cloudProvider
-                        })
-                    });
+                    button.disabled = true;
+                    launcher.querySelector('.lab-status').textContent = 'Indítás folyamatban...';
 
-                    const data = await res.json();
-                    console.log('Backend response:', data);
+                    try {
+                        const res = await fetch('/wp-json/lab-launcher/v1/start-lab', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'same-origin',
+                            body: JSON.stringify({
+                                lab_name: labName,
+                                cloud_provider: cloudProvider,
+                                lab_ttl: parseInt(labTTL)
+                            })
+                        });
 
-                    if (res.ok) {
-                        let username = data.username;
-                        if (cloudProvider === 'azure') {
-                            username = username + '@cloudsteak.com';
+                        const data = await res.json();
+                        console.log('Backend response:', data);
+
+                        const copyIcon = (text) => `<button onclick="navigator.clipboard.writeText('${text.replace(/'/g, "\\'")}')" title="Másolás" style="margin-left:6px;cursor:pointer;background:none;border:none;"><i class="fa-solid fa-copy"></i></button>`;
+
+                        if (res.ok) {
+                            let username = data.username;
+                            if (cloudProvider === 'azure') {
+                                username += '@cloudsteak.com';
+                            }
+
+                            let loginLink = '';
+                            if (cloudProvider === 'azure') {
+                                loginLink = `<a href="https://portal.azure.com" target="_blank" rel="noopener noreferrer">Belépés a laborba (Azure) <i class="fa-solid fa-up-right-from-square"></i></a><br>`;
+                            } else if (cloudProvider === 'aws') {
+                                loginLink = `<a href="https://cloudsteak.signin.aws.amazon.com/console" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-up-right-from-square"></i> Belépés a laborba (AWS)</a><br>`;
+                            }
+
+                            resultBox.innerHTML =
+                                loginLink +
+                                `Felhasználónév: <strong>${username}</strong> ${copyIcon(username)}<br>` +
+                                `<strong>Jelszó: <strong>${data.password}</strong> ${copyIcon(data.password)}<br>` +
+                                `<br><p>Hamarosan értesítést kapsz a gyakorló környezet állapotáról.</p>`;
+                        } else {
+                            resultBox.innerHTML = `<span style='color:red;'>Hiba: ${data.message || 'Ismeretlen'}</span>`;
                         }
-
-                        resultBox.innerHTML = `<strong>Felhasználónév:</strong> ${username}<br><strong>Jelszó:</strong> ${data.password}<p>Hamarosan értesítést kapsz a gyakorló környezet állapotáról.</p>`;
-                    } else {
-                        resultBox.innerHTML = `<span style='color:red;'>Hiba: ${data.message || 'Ismeretlen'}</span>`;
+                    } catch (e) {
+                        console.error('Hiba:', e);
+                        resultBox.innerHTML = `<span style='color:red;'>Hálózati hiba vagy válasz sikertelen.</span>`;
+                    } finally {
+                        launcher.querySelector('.lab-status').textContent = '';
+                        button.disabled = false;
                     }
                 });
             });
@@ -136,5 +154,6 @@ function lab_launcher_enqueue_script()
     </script>
     <?php
 }
+
 
 

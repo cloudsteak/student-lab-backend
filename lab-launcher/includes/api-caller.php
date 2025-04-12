@@ -1,7 +1,7 @@
 <?php
 // includes/api-caller.php
 
-function lab_launcher_call_backend($payload) {
+function lab_launcher_call_backend($payload, $endpoint = '/start-lab') {
     $settings = get_option('lab_launcher_settings');
     $auth0_domain = $settings['auth0_domain'] ?? '';
     $client_id = $settings['auth0_client_id'] ?? '';
@@ -34,7 +34,7 @@ function lab_launcher_call_backend($payload) {
         return new WP_Error('token_empty', 'Hiányzó access token', array('status' => 500));
     }
 
-    $backend_response = wp_remote_post("$backend_url/start-lab", array(
+    $backend_response = wp_remote_post(trailingslashit($backend_url) . ltrim($endpoint, '/'), array(
         'headers' => array(
             'Authorization' => 'Bearer ' . $access_token,
             'Content-Type' => 'application/json'
