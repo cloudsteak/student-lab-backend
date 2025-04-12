@@ -1,24 +1,28 @@
 <?php
 /*
 Plugin Name: CloudMentor Lab Launcher
+Plugin URI: https://github.com/the1bit/student-lab-backend/tree/main/lab-launcher
 Description: WordPress plugin a CloudMentor Lab indításhoz (Azure, AWS).
-Version: 0.0.6
+Version: 0.0.10
 Author: CloudMentor
 Author URI: https://cloudmentor.hu
 License: MIT
 License URI: https://opensource.org/licenses/MIT
-Requires at least: 6.7
-Tested up to: 6.7
-Requires PHP: 8.1
-
+Requires at least: 6.2
+Tested up to: 6.7.2
+Requires PHP: 8.0
+Text Domain: cloudmentor-lab-launcher
+Domain Path: /languages
 */
 
 // Beillesztés: admin oldal, REST API, shortcode, beállítások
 
 // 1. Plugin alap inicializálás
 add_action('plugins_loaded', 'lab_launcher_init');
-function lab_launcher_init() {
+function lab_launcher_init()
+{
     require_once plugin_dir_path(__FILE__) . 'includes/settings.php';
+    require_once plugin_dir_path(__FILE__) .'includes/enqueue.php';
     require_once plugin_dir_path(__FILE__) . 'includes/shortcode.php';
     require_once plugin_dir_path(__FILE__) . 'includes/api-caller.php';
     require_once plugin_dir_path(__FILE__) . 'admin/lab-admin-page.php';
@@ -50,6 +54,7 @@ function lab_launcher_start_lab_rest($request)
     $payload = array(
         'lab_name' => sanitize_text_field($data['lab_name']),
         'cloud_provider' => sanitize_text_field($data['cloud_provider']),
+        'lab_ttl' => intval($data['lab_ttl'] ?? 5400),
         'email' => $lab_launcher_user_email
     );
 
@@ -64,4 +69,3 @@ function lab_launcher_start_lab_rest($request)
     return new WP_REST_Response($result, 200);
 }
 
-require_once plugin_dir_path(__FILE__) . 'includes/api-caller.php';
