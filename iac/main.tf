@@ -23,9 +23,10 @@ resource "kubernetes_secret" "lab_secrets" {
     namespace = kubernetes_namespace.lab_ns.metadata[0].name
   }
   data = {
-    BREVO_API_KEY = var.brevo_api_key
-    AUTH0_DOMAIN  = var.auth0_domain
-    GITHUB_TOKEN  = var.github_token
+    BREVO_API_KEY        = var.brevo_api_key
+    AUTH0_DOMAIN         = var.auth0_domain
+    GITHUB_TOKEN         = var.github_token
+    WORDPRESS_SECRET_KEY = var.wordpress_secret_key
   }
   type = "Opaque"
 }
@@ -55,9 +56,10 @@ resource "kubernetes_config_map" "lab_config" {
     namespace = kubernetes_namespace.lab_ns.metadata[0].name
   }
   data = {
-    LAB_TTL_SECONDS  = var.lab_ttl_seconds
-    PORTAL_AZURE_URL = var.azure_portal_url
-    PORTAL_AWS_URL   = var.aws_portal_url
+    LAB_TTL_SECONDS       = var.lab_ttl_seconds
+    PORTAL_AZURE_URL      = var.azure_portal_url
+    PORTAL_AWS_URL        = var.aws_portal_url
+    WORDPRESS_WEBHOOK_URL = var.wordpress_webhook_url
   }
 }
 
@@ -114,6 +116,7 @@ resource "kubernetes_deployment" "lab_backend" {
             }
 
           }
+
           env {
             name = "PORTAL_AWS_URL"
             value_from {
@@ -179,6 +182,25 @@ resource "kubernetes_deployment" "lab_backend" {
           env {
             name  = "GITHUB_WORKFLOW_FILENAME"
             value = var.github_workflow_filename
+          }
+
+          env {
+            name = "WORDPRESS_WEBHOOK_URL"
+            value_from {
+              config_map_key_ref {
+                name = kubernetes_config_map.lab_config.metadata[0].name
+                key  = "WORDPRESS_WEBHOOK_URL"
+              }
+            }
+          }
+          env {
+            name = "WORDPRESS_SECRET_KEY"
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret.lab_secrets.metadata[0].name
+                key  = "WORDPRESS_SECRET_KEY"
+              }
+            }
           }
         }
       }

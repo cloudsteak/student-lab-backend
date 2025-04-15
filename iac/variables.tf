@@ -80,3 +80,13 @@ variable "aws_portal_url" {
 variable "backend_url" {
   type = string
 }
+
+
+variable "wordpress_webhook_url" {
+  type = string
+}
+
+variable "wordpress_secret_key" {
+  type      = string
+  sensitive = true
+}
