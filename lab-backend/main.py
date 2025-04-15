@@ -23,6 +23,8 @@ redis_client = Redis(
 )
 
 TTL = int(os.getenv("LAB_TTL_SECONDS", 3600))
+WORDPRESS_WEBHOOK_URL = os.getenv("WORDPRESS_WEBHOOK_URL")
+WORDPRESS_SECRET_KEY = os.getenv("WORDPRESS_SECRET_KEY")
 
 async def trigger_github_workflow(username: str, password: str, lab: str = "basic", action: str = "apply", cloud_provider: str = "aws"):
     repo = os.getenv("GITHUB_REPO")
