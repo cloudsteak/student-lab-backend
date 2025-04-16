@@ -5,6 +5,7 @@ from .utils import generate_credentials, get_rsa_key
 from .emailer import send_lab_ready_email
 from .models import LabRequest, LabStatus, LabReadyRequest, LabDeleteRequest, status_map
 from redis import Redis
+import requests
 import os
 import json
 from jose import jwt, JWTError
