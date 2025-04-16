@@ -19,3 +19,9 @@ class LabStatus(BaseModel):
 
 class LabDeleteRequest(BaseModel):
     username: str
+
+
+status_map = {
+    "ready": "success",
+    "failed": "error"
+}

@@ -21,6 +21,21 @@ function lab_launcher_render_shortcode($atts)
 
     if (is_user_logged_in()) {
 
+        global $lab_launcher_user_email;
+        $status_key = $lab_launcher_user_email . '|' . $id;
+        $statuses = get_option('lab_launcher_statuses', []);
+        $lab_status = $statuses[$status_key] ?? null;
+
+        // Előre generáljuk a státuszt
+        $status_text = '';
+        if ($lab_status === 'pending') {
+            $status_text = '<span style="color: orange;">Folyamatban...</span>';
+        } elseif ($lab_status === 'success') {
+            $status_text = '<span style="color: green;">Készen áll</span>';
+        } elseif ($lab_status === 'error') {
+            $status_text = '<span style="color: red;">Hiba történt</span>';
+        }
+
         if (!empty($lab['image_id'])) {
             $image_url = wp_get_attachment_image_url($lab['image_id'], 'medium');
             $output .= '<img src="' . esc_url($image_url) . '" style="max-width:100%;height:auto;" />';
@@ -36,12 +51,14 @@ function lab_launcher_render_shortcode($atts)
         $output .= '    <p><strong>Lab:</strong> ' . esc_html($lab['lab_name']) . ' (' . strtoupper($lab['cloud']) . ')</p>';
 
         $output .= '    <button class="lab-launch-button">Lab indítása <i class="fa-solid fa-play"></i></button>';
-        $output .= '    <div class="lab-status"></div>';
+        $output .= '    <div class="lab-status">' . $status_text . '</div>';
         $output .= '    <div class="lab-result" style="margin-top:10px;"></div>';
         $output .= '  </div>';
         $output .= '</div>';
 
-        // Inline JS betöltése
+        $refresh_interval = intval(get_option('lab_launcher_settings')['status_refresh_interval'] ?? 30);
+        $output .= '<script>window.labLauncherRefreshInterval = ' . $refresh_interval . ';</script>';
+
         add_action('wp_footer', 'lab_launcher_enqueue_script');
     } else {
         $output .= '<p>Kérlek, jelentkezz be a lab eléréséhez.</p>';
@@ -89,6 +106,7 @@ function lab_launcher_enqueue_script()
 {
     ?>
     <script>
+        // 1. Indítás kezelése
         document.addEventListener('DOMContentLoaded', function () {
             document.querySelectorAll('.lab-launch-button').forEach(button => {
                 button.addEventListener('click', async () => {
@@ -151,7 +169,48 @@ function lab_launcher_enqueue_script()
                 });
             });
         });
+        // 2. Automatikus státuszfrissítés
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.lab-launcher').forEach(launcher => {
+                const labId = launcher.dataset.id;
+                const labStatusDiv = launcher.querySelector('.lab-status');
+
+                const checkStatus = async () => {
+                    try {
+                        const res = await fetch('/wp-json/lab-launcher/v1/lab-status-update', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ lab_id: labId }) // csak a lab_id szükséges
+                        });
+
+                        const data = await res.json();
+                        if (data && data.status) {
+                            let html = '';
+                            if (data.status === 'pending') {
+                                html = '<span style="color: orange;">Folyamatban...</span>';
+                            } else if (data.status === 'success') {
+                                html = '<span style="color: green;">Készen áll</span>';
+                            } else if (data.status === 'error') {
+                                html = '<span style="color: red;">Hiba történt</span>';
+                            }
+                            labStatusDiv.innerHTML = html;
+                        }
+                    } catch (e) {
+                        console.warn('Státusz lekérdezés sikertelen:', e);
+                    }
+                };
+
+                checkStatus();
+                // Automatikus státuszfrissítés, ha globális érték be van állítva
+                if (window.labLauncherRefreshInterval && parseInt(window.labLauncherRefreshInterval) > 0) {
+                    setInterval(checkStatus, parseInt(window.labLauncherRefreshInterval) * 1000);
+                }
+            });
+        });
     </script>
+
     <?php
 }
 

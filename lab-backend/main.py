@@ -3,7 +3,7 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from .utils import generate_credentials, get_rsa_key
 from .emailer import send_lab_ready_email
-from .models import LabRequest, LabStatus, LabReadyRequest, LabDeleteRequest
+from .models import LabRequest, LabStatus, LabReadyRequest, LabDeleteRequest, status_map
 from redis import Redis
 import os
 import json
@@ -23,6 +23,8 @@ redis_client = Redis(
 )
 
 TTL = int(os.getenv("LAB_TTL_SECONDS", 3600))
+WORDPRESS_WEBHOOK_URL = os.getenv("WORDPRESS_WEBHOOK_URL")
+WORDPRESS_SECRET_KEY = os.getenv("WORDPRESS_SECRET_KEY")
 
 async def trigger_github_workflow(username: str, password: str, lab: str = "basic", action: str = "apply", cloud_provider: str = "aws"):
     repo = os.getenv("GITHUB_REPO")
@@ -170,18 +172,53 @@ async def lab_ready(request: LabReadyRequest, token: dict = Depends(verify_token
         lab_data["status"] = status_value
         lab_data["error_at"] = now
         redis_client.set(key, json.dumps(lab_data))
+
+        # WordPress webhook küldés hibás státusz esetén is
+        if WORDPRESS_WEBHOOK_URL and WORDPRESS_SECRET_KEY:
+            webhook_url = f"{WORDPRESS_WEBHOOK_URL}?secret_key={WORDPRESS_SECRET_KEY}"
+            webhook_status = status_map.get(status_value, "pending")
+            payload = {
+                "email": lab_data.get("email"),
+                "lab_id": lab_data.get("lab_id", "unknown"),
+                "status": webhook_status
+            }
+            try:
+                response = requests.post(webhook_url, json=payload)
+                response.raise_for_status()
+            except requests.RequestException as e:
+                print(f"[WARNING] Failed to call WordPress webhook: {str(e)}")
+
         return {"message": f"Lab {username} reported status: {status_value}"}
 
-    # success case
+    # success case (status_value == "ready")
     lab_data["status"] = "ready"
     lab_data["started_at"] = now 
     lab_data["ttl_in_seconds"] = TTL
-    
 
-    send_lab_ready_email(username, lab_data["password"], lab_data["email"], cloud_provider=lab_data["cloud_provider"])
+    send_lab_ready_email(
+        username,
+        lab_data["password"],
+        lab_data["email"],
+        cloud_provider=lab_data["cloud_provider"]
+    )
     redis_client.set(key, json.dumps(lab_data))
 
-    return {"message": f"Lab {username} marked as ready and email sent"}
+    # WordPress webhook hívása ready esetén
+    if WORDPRESS_WEBHOOK_URL and WORDPRESS_SECRET_KEY:
+        webhook_url = f"{WORDPRESS_WEBHOOK_URL}?secret_key={WORDPRESS_SECRET_KEY}"
+        webhook_status = status_map.get("ready", "pending")
+        payload = {
+            "email": lab_data.get("email"),
+            "lab_id": lab_data.get("lab_id", "unknown"),
+            "status": webhook_status
+        }
+        try:
+            response = requests.post(webhook_url, json=payload)
+            response.raise_for_status()
+        except requests.RequestException as e:
+            print(f"[WARNING] Failed to call WordPress webhook: {str(e)}")
+
+    return {"message": f"Lab {username} marked as ready, email sent, WordPress notified"}
 
 
 @app.post("/lab-delete-internal")

@@ -3,7 +3,7 @@
 Plugin Name: CloudMentor Lab Launcher
 Plugin URI: https://github.com/the1bit/student-lab-backend/tree/main/lab-launcher
 Description: WordPress plugin a CloudMentor Lab indításhoz (Azure, AWS).
-Version: 0.0.10
+Version: 0.0.11
 Author: CloudMentor
 Author URI: https://cloudmentor.hu
 License: MIT
@@ -22,20 +22,72 @@ add_action('plugins_loaded', 'lab_launcher_init');
 function lab_launcher_init()
 {
     require_once plugin_dir_path(__FILE__) . 'includes/settings.php';
-    require_once plugin_dir_path(__FILE__) .'includes/enqueue.php';
+    require_once plugin_dir_path(__FILE__) . 'includes/enqueue.php';
     require_once plugin_dir_path(__FILE__) . 'includes/shortcode.php';
     require_once plugin_dir_path(__FILE__) . 'includes/api-caller.php';
     require_once plugin_dir_path(__FILE__) . 'admin/lab-admin-page.php';
 }
 
-// 2. REST API regisztrálás
 add_action('rest_api_init', function () {
     register_rest_route('lab-launcher/v1', '/start-lab', array(
         'methods' => 'POST',
         'callback' => 'lab_launcher_start_lab_rest',
         'permission_callback' => '__return_true'
     ));
+
+    register_rest_route('lab-launcher/v1', '/lab-status-update', [
+        'methods' => 'POST',
+        'callback' => 'lab_launcher_status_update',
+        'permission_callback' => '__return_true'
+    ]);
+
+    register_rest_route('lab-launcher/v1', '/lab-status-webhook', [
+        'methods' => 'POST',
+        'callback' => 'lab_launcher_status_webhook',
+        'permission_callback' => '__return_true'
+    ]);
 });
+
+function lab_launcher_status_webhook($request) {
+    $params = $request->get_json_params();
+
+    $email = sanitize_email($params['email'] ?? '');
+    $lab_id = sanitize_text_field($params['lab_id'] ?? '');
+    $status = sanitize_text_field($params['status'] ?? '');
+    $provided_key = $_GET['secret_key'] ?? '';
+
+    $valid_statuses = ['pending', 'success', 'error'];
+    $settings = get_option('lab_launcher_settings', []);
+    $expected_key = $settings['status_webhook_token'] ?? '';
+
+    if (!$email || !$lab_id || !in_array($status, $valid_statuses) || $provided_key !== $expected_key) {
+        return new WP_REST_Response(['message' => 'Érvénytelen kérés'], 403);
+    }
+
+    $statuses = get_option('lab_launcher_statuses', []);
+    $statuses["$email|$lab_id"] = $status;
+    update_option('lab_launcher_statuses', $statuses);
+
+    return new WP_REST_Response(['message' => 'Státusz frissítve'], 200);
+}
+
+function lab_launcher_status_update($request) {
+    $params = $request->get_json_params();
+    $lab_id = sanitize_text_field($params['lab_id'] ?? '');
+
+    global $lab_launcher_user_email;
+    $email = sanitize_email($lab_launcher_user_email);
+
+    if (!$lab_id || !$email) {
+        return new WP_REST_Response(['message' => 'Hiányzó adatok'], 400);
+    }
+
+    $statuses = get_option('lab_launcher_statuses', []);
+    $status = $statuses["$email|$lab_id"] ?? 'unknown';
+
+    return new WP_REST_Response(['status' => $status], 200);
+}
+
 
 function lab_launcher_start_lab_rest($request)
 {
