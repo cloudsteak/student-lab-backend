@@ -163,8 +163,6 @@ async def lab_ready(request: LabReadyRequest, token: dict = Depends(verify_token
     username = request.username
     status_value = request.status.lower()
     
-    logging.info(f"Lab ready status for {username}: {status_value}")
-    logging.info(f"WordPress webhook URL: {WORDPRESS_WEBHOOK_URL}")
 
     key = f"lab:{username}"
     lab_raw = redis_client.get(key)
@@ -172,7 +170,7 @@ async def lab_ready(request: LabReadyRequest, token: dict = Depends(verify_token
         raise HTTPException(status_code=404, detail="Lab not found")
 
     lab_data = json.loads(lab_raw)
-
+    
     if lab_data.get("status") == "ready":
         return {"message": "Lab already marked as ready"}
 
@@ -187,9 +185,14 @@ async def lab_ready(request: LabReadyRequest, token: dict = Depends(verify_token
         if WORDPRESS_WEBHOOK_URL and WORDPRESS_SECRET_KEY:
             webhook_url = f"{WORDPRESS_WEBHOOK_URL}?secret_key={WORDPRESS_SECRET_KEY}"
             webhook_status = status_map.get(status_value, "pending")
+            
+            # Generate lab_id from cloud and lab_name
+            cloud = lab_data.get("cloud_provider", "").strip().lower()
+            name = lab_data.get("lab_name", "").strip().lower()
+            lab_id = f"{cloud}-{name}" if cloud and name else "unknown"
             payload = {
                 "email": lab_data.get("email"),
-                "lab_id": lab_data.get("lab_id", "unknown"),
+                "lab_id": lab_id,
                 "status": webhook_status
             }
             try:
@@ -199,6 +202,7 @@ async def lab_ready(request: LabReadyRequest, token: dict = Depends(verify_token
                 print(f"[WARNING] Failed to call WordPress webhook: {str(e)}")
 
         return {"message": f"Lab {username} reported status: {status_value}"}
+
 
     # success case (status_value == "ready")
     lab_data["status"] = "ready"
@@ -217,9 +221,19 @@ async def lab_ready(request: LabReadyRequest, token: dict = Depends(verify_token
     if WORDPRESS_WEBHOOK_URL and WORDPRESS_SECRET_KEY:
         webhook_url = f"{WORDPRESS_WEBHOOK_URL}?secret_key={WORDPRESS_SECRET_KEY}"
         webhook_status = status_map.get("ready", "pending")
+        
+        # Generate lab_id from cloud and lab_name
+        cloud = lab_data.get("cloud_provider", "").strip().lower()
+        name = lab_data.get("lab_name", "").strip().lower()
+        lab_id = f"{cloud}-{name}" if cloud and name else "unknown"
+
+        
+        logging.info(f"Lab info for {lab_data.get("email")}: {lab_id}")
+        logging.info(f"WordPress webhook URL: {WORDPRESS_WEBHOOK_URL}")
+        
         payload = {
             "email": lab_data.get("email"),
-            "lab_id": lab_data.get("lab_id", "unknown"),
+            "lab_id": lab_id,
             "status": webhook_status
         }
         try:
