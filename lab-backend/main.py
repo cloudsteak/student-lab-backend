@@ -15,6 +15,11 @@ from datetime import datetime
 from fastapi.responses import JSONResponse
 import logging
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s"
+)
+
 app = FastAPI(docs_url="/docs", redoc_url=None)
 security = HTTPBearer()
 
@@ -160,7 +165,6 @@ async def lab_ready(request: LabReadyRequest, token: dict = Depends(verify_token
     
     logging.info(f"Lab ready status for {username}: {status_value}")
     logging.info(f"WordPress webhook URL: {WORDPRESS_WEBHOOK_URL}")
-    logging.info(f"WordPress secret key: {WORDPRESS_SECRET_KEY}")
 
     key = f"lab:{username}"
     lab_raw = redis_client.get(key)
