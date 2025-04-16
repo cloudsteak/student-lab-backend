@@ -183,6 +183,7 @@ async def lab_ready(request: LabReadyRequest, token: dict = Depends(verify_token
 
         # WordPress webhook küldés hibás státusz esetén is
         if WORDPRESS_WEBHOOK_URL and WORDPRESS_SECRET_KEY:
+            logging.info("Sending webhook to WordPress - error case")
             webhook_url = f"{WORDPRESS_WEBHOOK_URL}?secret_key={WORDPRESS_SECRET_KEY}"
             webhook_status = status_map.get(status_value, "pending")
             
@@ -190,6 +191,9 @@ async def lab_ready(request: LabReadyRequest, token: dict = Depends(verify_token
             cloud = lab_data.get("cloud_provider", "").strip().lower()
             name = lab_data.get("lab_name", "").strip().lower()
             lab_id = f"{cloud}-{name}" if cloud and name else "unknown"
+            
+            logging.info(f"Lab info for {lab_data.get('email')}: {lab_id} - {webhook_status} - status_map.get(status_value, 'pending')")
+            logging.info(f"WordPress webhook URL: {WORDPRESS_WEBHOOK_URL}")
             payload = {
                 "email": lab_data.get("email"),
                 "lab_id": lab_id,
@@ -219,6 +223,7 @@ async def lab_ready(request: LabReadyRequest, token: dict = Depends(verify_token
 
     # WordPress webhook hívása ready esetén
     if WORDPRESS_WEBHOOK_URL and WORDPRESS_SECRET_KEY:
+        logging.info("Sending webhook to WordPress - ready case")
         webhook_url = f"{WORDPRESS_WEBHOOK_URL}?secret_key={WORDPRESS_SECRET_KEY}"
         webhook_status = status_map.get("ready", "pending")
         
@@ -228,7 +233,7 @@ async def lab_ready(request: LabReadyRequest, token: dict = Depends(verify_token
         lab_id = f"{cloud}-{name}" if cloud and name else "unknown"
 
         
-        logging.info(f"Lab info for {lab_data.get('email')}: {lab_id}")
+        logging.info(f"Lab info for {lab_data.get('email')}: {lab_id} - {webhook_status} - status_map.get('ready', 'pending')")
         logging.info(f"WordPress webhook URL: {WORDPRESS_WEBHOOK_URL}")
         
         payload = {
