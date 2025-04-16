@@ -228,7 +228,7 @@ async def lab_ready(request: LabReadyRequest, token: dict = Depends(verify_token
         lab_id = f"{cloud}-{name}" if cloud and name else "unknown"
 
         
-        logging.info(f"Lab info for {lab_data.get("email")}: {lab_id}")
+        logging.info(f"Lab info for {lab_data.get('email')}: {lab_id}")
         logging.info(f"WordPress webhook URL: {WORDPRESS_WEBHOOK_URL}")
         
         payload = {
