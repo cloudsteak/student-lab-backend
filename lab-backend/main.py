@@ -112,8 +112,10 @@ async def start_lab(request: LabRequest, token: dict = Depends(verify_token)):
     }
 
     # Store lab metadata (no TTL!)
+    logging.info(f"Storing lab data for {username} in Redis")
     redis_client.set(f"lab:{username}", json.dumps(lab_data))
 
+    
     # Trigger GitHub Actions - Apply
     await trigger_github_workflow(
         username=username, 
@@ -123,7 +125,7 @@ async def start_lab(request: LabRequest, token: dict = Depends(verify_token)):
         cloud_provider=request.cloud_provider)
 
     return {
-        "message": "Lab started",
+        "message": "Lab creation is in progress",
         "username": username,
         "password": password
     }
