@@ -11,13 +11,8 @@ resource "kubernetes_secret" "cronjob_cleanup_secrets" {
     namespace = kubernetes_namespace.cron_ns.metadata[0].name
   }
   data = {
-    AUTH0_DOMAIN        = var.auth0_domain
-    AUTH0_CLIENT_ID     = var.auth0_lab_automation_client_id
-    AUTH0_CLIENT_SECRET = var.auth0_lab_automation_client_secret
-    AUTH0_AUDIENCE      = var.auth0_audience
-    BACKEND_URL         = var.backend_url
-
-
+    BACKEND_URL     = var.backend_url
+    INTERNAL_SECRET = random_password.internal_secret.result
   }
   type = "Opaque"
 }
@@ -81,44 +76,16 @@ resource "kubernetes_cron_job_v1" "lab_cleanup" {
               image_pull_policy = "Always"
 
               env {
-                name = "AUTH0_DOMAIN"
+                name = "INTERNAL_SECRET"
                 value_from {
                   secret_key_ref {
                     name = kubernetes_secret.cronjob_cleanup_secrets.metadata[0].name
-                    key  = "AUTH0_DOMAIN"
+                    key  = "INTERNAL_SECRET"
                   }
                 }
               }
 
-              env {
-                name = "AUTH0_CLIENT_ID"
-                value_from {
-                  secret_key_ref {
-                    name = kubernetes_secret.cronjob_cleanup_secrets.metadata[0].name
-                    key  = "AUTH0_CLIENT_ID"
-                  }
-                }
-              }
 
-              env {
-                name = "AUTH0_CLIENT_SECRET"
-                value_from {
-                  secret_key_ref {
-                    name = kubernetes_secret.cronjob_cleanup_secrets.metadata[0].name
-                    key  = "AUTH0_CLIENT_SECRET"
-                  }
-                }
-              }
-
-              env {
-                name = "AUTH0_AUDIENCE"
-                value_from {
-                  secret_key_ref {
-                    name = kubernetes_secret.cronjob_cleanup_secrets.metadata[0].name
-                    key  = "AUTH0_AUDIENCE"
-                  }
-                }
-              }
 
               env {
                 name = "BACKEND_URL"
