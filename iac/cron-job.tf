@@ -45,7 +45,7 @@ resource "kubernetes_cron_job_v1" "lab_cleanup" {
   }
 
   spec {
-    schedule                      = "* */24 * * *" # Every 24 hours
+    schedule                      = "*/10 * * * *" # Every 10 minutes
     successful_jobs_history_limit = 1
     failed_jobs_history_limit     = 1
 
