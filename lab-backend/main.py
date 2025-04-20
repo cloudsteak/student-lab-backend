@@ -3,8 +3,10 @@
 from fastapi import FastAPI, Depends, HTTPException, status, Header
 from .utils import generate_credentials, get_rsa_key
 from .emailer import send_lab_ready_email
-from .models import LabRequest, LabReadyRequest, LabDeleteRequest, status_map
+from .models import LabRequest, LabReadyRequest, LabDeleteRequest, status_map, VerifyRequest
 from redis import Redis
+from pydantic import BaseModel, EmailStr
+from verify_lab import verify_lab
 import requests
 import os
 import json
@@ -115,7 +117,7 @@ async def start_lab(request: LabRequest, token: dict = Depends(verify_token)):
     logging.info(f"Storing lab data for {username} in Redis")
     redis_client.set(f"lab:{username}", json.dumps(lab_data))
 
-    
+
     # Trigger GitHub Actions - Apply
     await trigger_github_workflow(
         username=username, 
@@ -278,3 +280,22 @@ async def clean_up_lab(request: LabDeleteRequest, _: str = Depends(verify_intern
     logging.info(f"Triggered destroy action for {request.username}")
     # Remove lab metadata from Redis
     return {"message": f"Destroy action triggered for {request.username}"}
+
+
+@app.post("/verify-lab")
+def verify_lab_endpoint(request: VerifyRequest):
+    subscription_id = os.getenv("AZURE_SUBSCRIPTION_ID")
+    if not subscription_id:
+        raise HTTPException(status_code=500, detail="Missing AZURE_SUBSCRIPTION_ID")
+
+    try:
+        result = verify_lab(
+            user=request.user,
+            email=request.email,
+            cloud=request.cloud,
+            lab=request.lab,
+            subscription_id=subscription_id
+        )
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
