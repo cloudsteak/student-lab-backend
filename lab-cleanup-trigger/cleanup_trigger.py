@@ -18,7 +18,7 @@ HEADERS = {"X-Internal-Secret": INTERNAL_SECRET}
 
 def is_expired(lab):
     started_at_str = lab.get("started_at")
-    ttl_seconds = lab.get("ttl_in_seconds", 3600)
+    ttl_seconds = lab.get("lab_ttl", 5400)  # Default TTL is 5400 seconds (1.5 hours)
     logging.info(f'TTL seconds: {ttl_seconds}')
     status = lab.get("status", "ready")
 
