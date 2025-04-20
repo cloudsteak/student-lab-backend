@@ -4,7 +4,7 @@ import sib_api_v3_sdk
 from sib_api_v3_sdk.rest import ApiException
 import os
 
-def send_lab_ready_email(username: str, password: str, recipient: str, cloud_provider: str):
+def send_lab_ready_email(username: str, password: str, recipient: str, cloud_provider: str, ttl_seconds: int):
     configuration = sib_api_v3_sdk.Configuration()
     configuration.api_key["api-key"] = os.getenv("BREVO_API_KEY")
     azure_portal_url = os.getenv("PORTAL_AZURE_URL")
@@ -25,7 +25,7 @@ def send_lab_ready_email(username: str, password: str, recipient: str, cloud_pro
     <p>Helló!</p>
     <p>A gyakorló környezeted elkészült. Kattinnts <a href='{cloud_console_url}' target='_blank'>ide a webes bejelentkezéshez</a>.</p>
     <p><b>Felhasználónév:</b> {username}<br><b>Jelszó:</b> {password}</p>
-    <p><strong>A lab {int(os.getenv("LAB_TTL_SECONDS"))/60} perc múlva automatikusan törlődik.</strong></p>
+    <p><strong>A lab {int(float(ttl_seconds) / 60)} perc múlva automatikusan törlődik.</strong></p>
     
     
     <p>Üdv, <br>Kiss Tibor - CloudMentor</p>
