@@ -23,10 +23,11 @@ resource "kubernetes_secret" "lab_secrets" {
     namespace = kubernetes_namespace.lab_ns.metadata[0].name
   }
   data = {
-    BREVO_API_KEY        = var.brevo_api_key
-    AUTH0_DOMAIN         = var.auth0_domain
-    GITHUB_TOKEN         = var.github_token
-    WORDPRESS_SECRET_KEY = var.wordpress_secret_key
+    BREVO_API_KEY         = var.brevo_api_key
+    AUTH0_DOMAIN          = var.auth0_domain
+    GITHUB_TOKEN          = var.github_token
+    WORDPRESS_SECRET_KEY  = var.wordpress_secret_key
+    AZURE_SUBSCRIPTION_ID = var.azure_subscription_id
   }
   type = "Opaque"
 }
@@ -205,6 +206,17 @@ resource "kubernetes_deployment" "lab_backend" {
               }
             }
           }
+
+          env {
+            name = "AZURE_SUBSCRIPTION_ID"
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret.lab_secrets.metadata[0].name
+                key  = "AZURE_SUBSCRIPTION_ID"
+              }
+            }
+          }
+
 
           env {
             name = "INTERNAL_SECRET"
