@@ -139,7 +139,7 @@ def lab_status_all(_: str = Depends(verify_internal_secret)):
             continue
         lab_data = json.loads(lab_raw)
         ttl = redis_client.ttl(key)
-        print(f"Lab {username} - TTL: {ttl}")
+        logging.info(f"Lab {username} - TTL: {ttl}")
         lab_data["username"] = username
         lab_data["ttl_seconds"] = ttl
         lab_data["ttl_in_seconds"] = TTL
@@ -260,8 +260,10 @@ def delete_lab_internal(request: LabDeleteRequest, _: str = Depends(verify_inter
     result = redis_client.delete(key)
 
     if result == 1:
+        logging.info(f"Redis key '{key}' deleted successfully")
         return {"message": f"Redis key '{key}' deleted successfully"}
     else:
+        logging.warning(f"Redis key '{key}' not found")
         raise HTTPException(status_code=404, detail=f"Redis key '{key}' not found")
 
 @app.post("/clean-up-lab")
@@ -269,11 +271,13 @@ async def clean_up_lab(request: LabDeleteRequest, _: str = Depends(verify_intern
     key = f"lab:{request.username}"
     lab_raw = redis_client.get(key)
     if not lab_raw:
+        logging.warning(f"Lab data not found in Redis for {request.username}")
         raise HTTPException(status_code=404, detail="Lab not found")
 
     lab = json.loads(lab_raw)
 
     if "password" not in lab or "lab_name" not in lab:
+        logging.warning(f"Lab data is incomplete in Redis for {request.username}")
         raise HTTPException(status_code=500, detail="Lab data is incomplete in Redis")
 
     await trigger_github_workflow(
@@ -284,4 +288,6 @@ async def clean_up_lab(request: LabDeleteRequest, _: str = Depends(verify_intern
         cloud_provider=lab["cloud_provider"]
     )
 
+    logging.info(f"Triggered destroy action for {request.username}")
+    # Remove lab metadata from Redis
     return {"message": f"Destroy action triggered for {request.username}"}
