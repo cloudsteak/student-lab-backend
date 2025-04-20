@@ -59,12 +59,6 @@ variable "github_workflow_filename" {
   type = string
 }
 
-variable "lab_ttl_seconds" {
-  type    = string
-  default = "5400"
-}
-
-
 variable "redis_host" {
   type = string
 }
