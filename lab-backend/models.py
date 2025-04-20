@@ -11,11 +11,6 @@ class LabReadyRequest(BaseModel):
     username: str
     status: str # expected values: "ready", "error", "failed", etc.
 
-class LabStatus(BaseModel):
-    lab_name: str
-    username: str
-    password: str
-    ttl_seconds: int
 
 class LabDeleteRequest(BaseModel):
     username: str

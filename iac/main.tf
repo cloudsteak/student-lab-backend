@@ -68,7 +68,6 @@ resource "kubernetes_config_map" "lab_config" {
     namespace = kubernetes_namespace.lab_ns.metadata[0].name
   }
   data = {
-    LAB_TTL_SECONDS       = var.lab_ttl_seconds
     PORTAL_AZURE_URL      = var.azure_portal_url
     PORTAL_AWS_URL        = var.aws_portal_url
     WORDPRESS_WEBHOOK_URL = var.wordpress_webhook_url
@@ -119,16 +118,7 @@ resource "kubernetes_deployment" "lab_backend" {
             name  = "REDIS_DB"
             value = "0"
           }
-          env {
-            name = "LAB_TTL_SECONDS"
-            value_from {
-              config_map_key_ref {
-                name = kubernetes_config_map.lab_config.metadata[0].name
-                key  = "LAB_TTL_SECONDS"
-              }
-            }
 
-          }
 
           env {
             name = "PORTAL_AWS_URL"

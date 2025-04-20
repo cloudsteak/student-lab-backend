@@ -3,7 +3,7 @@
 from fastapi import FastAPI, Depends, HTTPException, status, Header
 from .utils import generate_credentials, get_rsa_key
 from .emailer import send_lab_ready_email
-from .models import LabRequest, LabStatus, LabReadyRequest, LabDeleteRequest, status_map
+from .models import LabRequest, LabReadyRequest, LabDeleteRequest, status_map
 from redis import Redis
 import requests
 import os
@@ -30,7 +30,6 @@ redis_client = Redis(
 )
 
 INTERNAL_SECRET = os.getenv("INTERNAL_SECRET")
-TTL = int(os.getenv("LAB_TTL_SECONDS", 3600))
 WORDPRESS_WEBHOOK_URL = os.getenv("WORDPRESS_WEBHOOK_URL")
 WORDPRESS_SECRET_KEY = os.getenv("WORDPRESS_SECRET_KEY")
 
@@ -104,10 +103,12 @@ async def start_lab(request: LabRequest, token: dict = Depends(verify_token)):
     lab_data = {
         "lab_name": request.lab_name,
         "cloud_provider": request.cloud_provider,
+        "lab_ttl": request.lab_ttl,
         "username": username,
         "password": password,
         "email": request.email,
         "status": "pending"
+        
     }
 
     # Store lab metadata (no TTL!)
@@ -141,25 +142,9 @@ def lab_status_all(_: str = Depends(verify_internal_secret)):
         ttl = redis_client.ttl(key)
         logging.info(f"Lab {username} - TTL: {ttl}")
         lab_data["username"] = username
-        lab_data["ttl_seconds"] = ttl
-        lab_data["ttl_in_seconds"] = TTL
         labs.append(lab_data)
 
     return JSONResponse(content={"labs": labs})
-
-@app.get("/lab-status/{username}", response_model=LabStatus)
-def lab_status(username: str, token: dict = Depends(verify_token)):
-    lab_raw = redis_client.get(f"lab:{username}")
-    if not lab_raw:
-        raise HTTPException(status_code=404, detail="Lab not found")
-    lab = json.loads(lab_raw)
-
-    ttl = 0
-    if "started_at" in lab:
-        started = datetime.fromisoformat(lab["started_at"])
-        ttl = max(0, TTL - int((datetime.utcnow() - started).total_seconds()))
-
-    return LabStatus(**lab, ttl_seconds=ttl)
 
 @app.post("/lab-ready")
 async def lab_ready(request: LabReadyRequest, token: dict = Depends(verify_token)):
@@ -215,13 +200,13 @@ async def lab_ready(request: LabReadyRequest, token: dict = Depends(verify_token
     # success case (status_value == "ready")
     lab_data["status"] = "ready"
     lab_data["started_at"] = now 
-    lab_data["ttl_in_seconds"] = TTL
 
     send_lab_ready_email(
         username,
         lab_data["password"],
         lab_data["email"],
-        cloud_provider=lab_data["cloud_provider"]
+        cloud_provider=lab_data["cloud_provider"],
+        ttl_seconds=lab_data["lab_ttl"]
     )
     redis_client.set(key, json.dumps(lab_data))
 
