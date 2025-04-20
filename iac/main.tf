@@ -31,6 +31,18 @@ resource "kubernetes_secret" "lab_secrets" {
   type = "Opaque"
 }
 
+resource "kubernetes_secret" "internal_secret_backend" {
+  metadata {
+    name      = "lab-internal-secret"
+    namespace = "student-lab-backend"
+  }
+
+  data = {
+    INTERNAL_SECRET = random_password.internal_secret.result
+  }
+
+  type = "Opaque"
+}
 
 resource "kubernetes_secret" "ghcr_auth" {
   metadata {
@@ -63,6 +75,7 @@ resource "kubernetes_config_map" "lab_config" {
   }
 }
 
+# Backend Deployment
 resource "kubernetes_deployment" "lab_backend" {
   metadata {
     name      = "student-lab-backend"
@@ -199,6 +212,16 @@ resource "kubernetes_deployment" "lab_backend" {
               secret_key_ref {
                 name = kubernetes_secret.lab_secrets.metadata[0].name
                 key  = "WORDPRESS_SECRET_KEY"
+              }
+            }
+          }
+
+          env {
+            name = "INTERNAL_SECRET"
+            value_from {
+              secret_key_ref {
+                name = "lab-internal-secret"
+                key  = "INTERNAL_SECRET"
               }
             }
           }

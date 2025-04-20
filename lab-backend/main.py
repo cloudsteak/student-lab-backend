@@ -1,6 +1,6 @@
 # --- lab-backend/main.py ---
 
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, Header
 from .utils import generate_credentials, get_rsa_key
 from .emailer import send_lab_ready_email
 from .models import LabRequest, LabStatus, LabReadyRequest, LabDeleteRequest, status_map
@@ -29,6 +29,7 @@ redis_client = Redis(
     db=int(os.getenv("REDIS_DB", 0))
 )
 
+INTERNAL_SECRET = os.getenv("INTERNAL_SECRET")
 TTL = int(os.getenv("LAB_TTL_SECONDS", 3600))
 WORDPRESS_WEBHOOK_URL = os.getenv("WORDPRESS_WEBHOOK_URL")
 WORDPRESS_SECRET_KEY = os.getenv("WORDPRESS_SECRET_KEY")
@@ -58,7 +59,12 @@ async def trigger_github_workflow(username: str, password: str, lab: str = "basi
         if response.status_code >= 300:
             raise HTTPException(status_code=500, detail=f"Failed to trigger workflow: {response.text}")
 
-
+# --- Internal secret validation ---
+def verify_internal_secret(x_internal_secret: str = Header(...)):
+    if INTERNAL_SECRET is None:
+        raise HTTPException(status_code=500, detail="INTERNAL_SECRET not configured")
+    if x_internal_secret != INTERNAL_SECRET:
+        raise HTTPException(status_code=403, detail="Forbidden: Invalid internal secret")
 
 # --- Auth0 validation ---
 def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
@@ -122,9 +128,7 @@ async def start_lab(request: LabRequest, token: dict = Depends(verify_token)):
     }
 
 @app.get("/lab-status/all")
-def list_labs(token: dict = Depends(verify_token)):
-    has_permission(token, "read:labs")
-
+def lab_status_all(_: str = Depends(verify_internal_secret)):
     keys = redis_client.keys("lab:*")
     labs = []
 
@@ -249,10 +253,8 @@ async def lab_ready(request: LabReadyRequest, token: dict = Depends(verify_token
 
     return {"message": f"Lab {username} marked as ready, email sent, WordPress notified"}
 
-
 @app.post("/lab-delete-internal")
-def delete_lab_internal(request: LabDeleteRequest, token: dict = Depends(verify_token)):
-    has_permission(token, "delete:lab")
+def delete_lab_internal(request: LabDeleteRequest, _: str = Depends(verify_internal_secret)):
 
     key = f"lab:{request.username}"
     result = redis_client.delete(key)
@@ -262,11 +264,8 @@ def delete_lab_internal(request: LabDeleteRequest, token: dict = Depends(verify_
     else:
         raise HTTPException(status_code=404, detail=f"Redis key '{key}' not found")
 
-
 @app.post("/clean-up-lab")
-async def clean_up_lab(request: LabDeleteRequest, token: dict = Depends(verify_token)):
-    has_permission(token, "delete:lab")
-
+async def clean_up_lab(request: LabDeleteRequest, _: str = Depends(verify_internal_secret)):
     key = f"lab:{request.username}"
     lab_raw = redis_client.get(key)
     if not lab_raw:
