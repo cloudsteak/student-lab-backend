@@ -85,8 +85,22 @@ variable "wordpress_secret_key" {
   sensitive = true
 }
 
+variable "azure_tenant_id" {
+  type        = string
+  description = "value of the azure tenant id"
+}
 variable "azure_subscription_id" {
   type        = string
   description = "value of the azure subscription id"
 
+}
+
+variable "azure_client_id" {
+  type        = string
+  description = "value of the azure client id"
+}
+
+variable "azure_client_secret" {
+  type        = string
+  description = "value of the azure client secret"
 }
