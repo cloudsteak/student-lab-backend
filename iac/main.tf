@@ -28,6 +28,9 @@ resource "kubernetes_secret" "lab_secrets" {
     GITHUB_TOKEN          = var.github_token
     WORDPRESS_SECRET_KEY  = var.wordpress_secret_key
     AZURE_SUBSCRIPTION_ID = var.azure_subscription_id
+    AZURE_CLIENT_ID       = var.azure_client_id
+    AZURE_TENANT_ID       = var.azure_tenant_id
+    AZURE_CLIENT_SECRET   = var.azure_client_secret
   }
   type = "Opaque"
 }
@@ -208,11 +211,41 @@ resource "kubernetes_deployment" "lab_backend" {
           }
 
           env {
+            name = "AZURE_TENANT_ID"
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret.lab_secrets.metadata[0].name
+                key  = "AZURE_TENANT_ID"
+              }
+            }
+          }
+
+          env {
             name = "AZURE_SUBSCRIPTION_ID"
             value_from {
               secret_key_ref {
                 name = kubernetes_secret.lab_secrets.metadata[0].name
                 key  = "AZURE_SUBSCRIPTION_ID"
+              }
+            }
+          }
+
+          env {
+            name = "AZURE_CLIENT_ID"
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret.lab_secrets.metadata[0].name
+                key  = "AZURE_CLIENT_ID"
+              }
+            }
+          }
+
+          env {
+            name = "AZURE_CLIENT_SECRET"
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret.lab_secrets.metadata[0].name
+                key  = "AZURE_CLIENT_SECRET"
               }
             }
           }
