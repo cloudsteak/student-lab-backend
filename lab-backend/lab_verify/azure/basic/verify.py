@@ -42,7 +42,8 @@ def run_verification(user: str, lab: str, email: str, subscription_id: str) -> d
             if getattr(image, key) != expected_image[key]:
                 return {"success": False, "message": f"VM image {key} hibás: {getattr(image, key)}"}
 
-        if vm.storage_profile.os_disk.os_type.value != vm_spec["os_type"]:
+        
+        if vm.storage_profile.os_disk.os_type != vm_spec["os_type"]:
             return {"success": False, "message": f"OS típus hibás: {vm.storage_profile.os_disk.os_type}"}
 
         # ✅ VNet ellenőrzés
