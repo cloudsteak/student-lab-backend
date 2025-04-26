@@ -8,9 +8,9 @@
       "os_disk_type": "StandardSSD_LRS",
       "os_type": "Linux",
       "image": {
-        "publisher": "Canonical",
-        "offer": "UbuntuServer",
-        "sku": "22.04-LTS",
+        "publisher": "canonical",
+        "offer": "0001-com-ubuntu-server-jammy",
+        "sku": "22_04-lts-gen2",
         "version": "latest"
       }
     },
