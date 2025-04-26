@@ -1,9 +1,9 @@
 # --- lab-backend/main.py ---
 
 from fastapi import FastAPI, Depends, HTTPException, status, Header
-from .utils import generate_credentials, get_rsa_key
-from .emailer import send_lab_ready_email
-from .models import LabRequest, LabReadyRequest, LabDeleteRequest, status_map, VerifyRequest
+from utils import generate_credentials, get_rsa_key
+from emailer import send_lab_ready_email
+from models import LabRequest, LabReadyRequest, LabDeleteRequest, status_map, VerifyRequest
 from redis import Redis
 from pydantic import BaseModel, EmailStr
 from verify_lab import verify_lab
