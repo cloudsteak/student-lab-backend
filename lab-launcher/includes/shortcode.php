@@ -134,7 +134,6 @@ function lab_launcher_enqueue_script()
                         });
 
                         const data = await res.json();
-                        console.log('Backend response:', data);
 
                         const copyIcon = (text) => `<button onclick="navigator.clipboard.writeText('${text.replace(/'/g, "\\'")}')" title="Másolás" style="margin-left:6px;cursor:pointer;background:none;border:none;"><i class="fa-solid fa-copy"></i></button>`;
 

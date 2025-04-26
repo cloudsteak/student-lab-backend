@@ -21,3 +21,9 @@ status_map = {
     "ready": "success",
     "failed": "error"
 }
+
+class VerifyRequest(BaseModel):
+    user: str
+    email: EmailStr
+    cloud: str  # pl. "azure"
+    lab: str    # pl. "basic"

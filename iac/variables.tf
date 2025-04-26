@@ -84,3 +84,9 @@ variable "wordpress_secret_key" {
   type      = string
   sensitive = true
 }
+
+variable "azure_subscription_id" {
+  type        = string
+  description = "value of the azure subscription id"
+
+}

@@ -1,0 +1,21 @@
+{
+  "cloud": "azure",
+  "checks": {
+    "vm": {
+      "name": "lab-vm-01",
+      "size": "Standard_B1s",
+      "os_disk_size": 128,
+      "os_disk_type": "StandardSSD_LRS",
+      "os_type": "Linux",
+      "image": {
+        "publisher": "Canonical",
+        "offer": "UbuntuServer",
+        "sku": "22.04-LTS",
+        "version": "latest"
+      }
+    },
+    "vnet": {
+      "name": "lab-vm-01-vnet"
+    }
+  }
+}
