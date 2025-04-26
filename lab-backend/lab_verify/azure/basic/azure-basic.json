@@ -3,7 +3,7 @@
   "checks": {
     "vm": {
       "name": "lab-vm-01",
-      "size": "Standard_B2s",
+      "size": "Standard_B1s",
       "os_disk_size": 128,
       "os_disk_type": "StandardSSD_LRS",
       "os_type": "Linux",
@@ -15,7 +15,7 @@
       }
     },
     "vnet": {
-      "name": "lab-vnet"
+      "name": "lab-vm-01-vnet"
     }
   }
 }

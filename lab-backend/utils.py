@@ -39,7 +39,7 @@ def generate_credentials():
     uppercase = string.ascii_uppercase
     lowercase = string.ascii_lowercase
     digits = string.digits
-    symbols = "!@#$%^&*()_+-=[]{}|'"  # AWS-supported special characters
+    symbols = "!@#$%^&*()_+-=[]{}|"  # AWS- and Azure-supported special characters
 
     # Ensure all requirements are met
     password_chars = [
