@@ -283,7 +283,8 @@ async def clean_up_lab(request: LabDeleteRequest, _: str = Depends(verify_intern
 
 
 @app.post("/verify-lab")
-def verify_lab_endpoint(request: VerifyRequest):
+def verify_lab_endpoint(request: VerifyRequest, token: dict = Depends(verify_token)):
+    has_permission(token, "verify:lab")
     subscription_id = os.getenv("AZURE_SUBSCRIPTION_ID")
     if not subscription_id:
         raise HTTPException(status_code=500, detail="Missing AZURE_SUBSCRIPTION_ID")
