@@ -4,6 +4,7 @@ from azure.identity import DefaultAzureCredential
 from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.network import NetworkManagementClient
 from azure.core.exceptions import ResourceNotFoundError
+import logging
 
 def run_verification(user: str, lab: str, email: str, subscription_id: str) -> dict:
     try:
@@ -36,6 +37,7 @@ def run_verification(user: str, lab: str, email: str, subscription_id: str) -> d
 
         image = vm.storage_profile.image_reference
         expected_image = vm_spec["image"]
+        logging.info(f"Expected image: {expected_image}")
         for key in ["publisher", "offer", "sku", "version"]:
             if getattr(image, key) != expected_image[key]:
                 return {"success": False, "message": f"VM image {key} hibás: {getattr(image, key)}"}
