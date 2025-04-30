@@ -16,3 +16,32 @@
 .lab-launch-button i {
     margin-left: 6px;
 }
+
+
+.lab-check-button {
+    background-color: #138d0f;
+    color: white;
+    padding: 5px 20px;
+    border: none;
+    border-radius: 20px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.lab-check-button:hover {
+    background-color: #000000;
+}
+
+.lab-check-button i {
+    margin-left: 6px;
+}
+
+
+.success{
+    color: #138d0f;
+}
+
+.error{
+    color: #d12626;
+}

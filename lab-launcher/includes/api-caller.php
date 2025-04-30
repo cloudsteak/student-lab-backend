@@ -1,7 +1,7 @@
 <?php
 // includes/api-caller.php
 
-function lab_launcher_call_backend($payload, $endpoint = '/start-lab') {
+function lab_launcher_call_backend($payload, $endpoint) {
     $settings = get_option('lab_launcher_settings');
     $auth0_domain = $settings['auth0_domain'] ?? '';
     $client_id = $settings['auth0_client_id'] ?? '';

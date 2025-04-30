@@ -53,6 +53,11 @@ function lab_launcher_render_shortcode($atts)
         $output .= '    <button class="lab-launch-button">Lab indítása <i class="fa-solid fa-play"></i></button>';
         $output .= '    <div class="lab-status">' . $status_text . '</div>';
         $output .= '    <div class="lab-result" style="margin-top:10px;"></div>';
+        $output .= '  <div class="lab-checker" 
+                    data-lab="' . esc_attr($lab['lab_name']) . '" 
+                    data-cloud="' . esc_attr($lab['cloud']) . '" >';
+        $output .= '    <button class="lab-check-button">Kész vagyok <i class="fa-solid fa-check-double"></i></button>';
+        $output .= '    <div class="lab-check-result" style="margin-top:10px;"></div>';
         $output .= '  </div>';
         $output .= '</div>';
 
@@ -60,6 +65,7 @@ function lab_launcher_render_shortcode($atts)
         $output .= '<script>window.labLauncherRefreshInterval = ' . $refresh_interval . ';</script>';
 
         add_action('wp_footer', 'lab_launcher_enqueue_script');
+        add_action('wp_footer', 'lab_check_enqueue_script');
     } else {
         $output .= '<p>Kérlek, jelentkezz be a lab eléréséhez.</p>';
     }
@@ -138,6 +144,7 @@ function lab_launcher_enqueue_script()
                         const copyIcon = (text) => `<button onclick="navigator.clipboard.writeText('${text.replace(/'/g, "\\'")}')" title="Másolás" style="margin-left:6px;cursor:pointer;background:none;border:none;"><i class="fa-solid fa-copy"></i></button>`;
 
                         if (res.ok) {
+
                             let username = data.username;
                             if (cloudProvider === 'azure') {
                                 username += '@cloudsteak.com';
@@ -152,6 +159,7 @@ function lab_launcher_enqueue_script()
 
                             resultBox.innerHTML =
                                 loginLink +
+                                `<span id="clean-username" hidden="hidden">${data.username}</span>` +
                                 `Felhasználónév: <strong>${username}</strong> ${copyIcon(username)}<br>` +
                                 `<strong>Jelszó: <strong>${data.password}</strong> ${copyIcon(data.password)}<br>` +
                                 `<br><p>Hamarosan értesítést kapsz a gyakorló környezet állapotáról.</p>`;
@@ -214,4 +222,66 @@ function lab_launcher_enqueue_script()
 }
 
 
+function lab_check_enqueue_script()
+{
+    ?>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.lab-check-button').forEach(button => {
+                button.addEventListener('click', async () => {
+                    const checker = button.closest('.lab-checker');
+                    const labName = checker.dataset.lab;
+                    const cloudProvider = checker.dataset.cloud;
+                    const username = document.getElementById("clean-username")?.textContent || 'tanulo-yb1q5m'; // DEV!!!!!
+                    const resultBox = checker.querySelector('.lab-check-result') || checker.nextElementSibling;
 
+
+                    console.log('Ellenőrzés indítása:', { labName, cloudProvider, username });
+
+                    button.disabled = true;
+
+                    try {
+                        const res = await fetch('/wp-json/lab-launcher/v1/verify-lab', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'same-origin',
+                            body: JSON.stringify({
+                                lab_name: labName,
+                                cloud_provider: cloudProvider,
+                                user: username
+                            })
+                        });
+
+                        const data = await res.json();
+
+                        let verifyicon = "<i class='fa-solid fa-thumbs-up'></i>";
+                        let verifyclass = "success";
+
+
+                        if (res.ok) {
+                            console.log("Data", JSON.stringify(data));
+                            if (data.success != true) {
+                                verifyicon = "<i class='fa-solid fa-triangle-exclamation'></i>";
+                                verifyclass = "error";
+                            }
+                            resultBox.innerHTML =
+                                `<span class=${verifyclass}>${verifyicon}</span>` +
+                                `<br><p>${data.message}</p>` +
+                                `${data.success !== true ? "<p>- Javítsd ki a hibát, és próbáld újra. - </p>" : ""}
+`;
+                        } else {
+                            resultBox.innerHTML = `<span style='color:red;'>Hiba: ${data.message || 'Ismeretlen'}</span>`;
+                        }
+                    } catch (e) {
+                        console.error('Hiba:', e);
+                        resultBox.innerHTML = `<span style='color:red;'>Hálózati hiba vagy válasz sikertelen.</span>`;
+                    } finally {
+                        button.disabled = false;
+                    }
+                });
+            });
+        });
+    </script>
+
+    <?php
+}

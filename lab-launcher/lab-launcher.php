@@ -35,6 +35,12 @@ add_action('rest_api_init', function () {
         'permission_callback' => '__return_true'
     ));
 
+    register_rest_route('lab-launcher/v1', '/verify-lab', array(
+        'methods' => 'POST',
+        'callback' => 'lab_check_lab_rest',
+        'permission_callback' => '__return_true'
+    ));
+
     register_rest_route('lab-launcher/v1', '/lab-status-update', [
         'methods' => 'POST',
         'callback' => 'lab_launcher_status_update',
@@ -48,7 +54,8 @@ add_action('rest_api_init', function () {
     ]);
 });
 
-function lab_launcher_status_webhook($request) {
+function lab_launcher_status_webhook($request)
+{
     $params = $request->get_json_params();
 
     $email = sanitize_email($params['email'] ?? '');
@@ -71,7 +78,8 @@ function lab_launcher_status_webhook($request) {
     return new WP_REST_Response(['message' => 'Státusz frissítve'], 200);
 }
 
-function lab_launcher_status_update($request) {
+function lab_launcher_status_update($request)
+{
     $params = $request->get_json_params();
     $lab_id = sanitize_text_field($params['lab_id'] ?? '');
 
@@ -110,7 +118,7 @@ function lab_launcher_start_lab_rest($request)
         'email' => $lab_launcher_user_email
     );
 
-    $result = lab_launcher_call_backend($payload);
+    $result = lab_launcher_call_backend($payload, 'start-lab');
 
     if (is_wp_error($result)) {
         return new WP_REST_Response([
@@ -121,3 +129,34 @@ function lab_launcher_start_lab_rest($request)
     return new WP_REST_Response($result, 200);
 }
 
+function lab_check_lab_rest($request)
+{
+    global $lab_launcher_user_email;
+
+    $data = $request->get_json_params();
+
+    if (!isset($data['lab_name']) || !isset($data['cloud_provider']) || !isset($data['user'])) {
+        return new WP_REST_Response(['message' => 'Hiányzó paraméterek'], 400);
+    }
+
+    if (empty($lab_launcher_user_email) || strpos($lab_launcher_user_email, '@') === false) {
+        return new WP_REST_Response(['message' => 'Felhasználói e-mail nem elérhető vagy érvénytelen'], 401);
+    }
+
+    $payload = array(
+        'lab' => sanitize_text_field($data['lab_name']),
+        'cloud' => sanitize_text_field($data['cloud_provider']),
+        'user' => sanitize_text_field($data['user']),
+        'email' => $lab_launcher_user_email
+    );
+
+    $result = lab_launcher_call_backend($payload, '/verify-lab');
+
+    if (is_wp_error($result)) {
+        return new WP_REST_Response([
+            'message' => $result->get_error_message()
+        ], $result->get_error_data()['status'] ?? 500);
+    }
+
+    return new WP_REST_Response($result, 200);
+}
