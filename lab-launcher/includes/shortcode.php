@@ -232,7 +232,7 @@ function lab_check_enqueue_script()
                     const checker = button.closest('.lab-checker');
                     const labName = checker.dataset.lab;
                     const cloudProvider = checker.dataset.cloud;
-                    const username = document.getElementById("clean-username")?.textContent || 'tanulo-yb1q5m'; // DEV!!!!!
+                    const username = document.getElementById("clean-username")?.textContent;
                     const resultBox = checker.querySelector('.lab-check-result') || checker.nextElementSibling;
 
 
