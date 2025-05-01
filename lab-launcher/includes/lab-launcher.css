@@ -9,6 +9,10 @@
     transition: background-color 0.2s;
 }
 
+#lab-check-button{
+    display: none;
+}
+
 .lab-launch-button:hover {
     background-color: #000000;
 }

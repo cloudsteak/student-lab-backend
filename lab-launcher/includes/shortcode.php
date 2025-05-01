@@ -50,13 +50,13 @@ function lab_launcher_render_shortcode($atts)
                     data-lab-ttl="' . esc_attr($lab['lab_ttl']) . '">';
         $output .= '    <p><strong>Lab:</strong> ' . esc_html($lab['lab_name']) . ' (' . strtoupper($lab['cloud']) . ')</p>';
 
-        $output .= '    <button class="lab-launch-button">Lab indítása <i class="fa-solid fa-play"></i></button>';
+        $output .= '    <button id="lab-launch-button" class="lab-launch-button">Lab indítása <i class="fa-solid fa-play"></i></button>';
         $output .= '    <div class="lab-status">' . $status_text . '</div>';
         $output .= '    <div class="lab-result" style="margin-top:10px;"></div>';
         $output .= '  <div class="lab-checker" 
                     data-lab="' . esc_attr($lab['lab_name']) . '" 
                     data-cloud="' . esc_attr($lab['cloud']) . '" >';
-        $output .= '    <button class="lab-check-button">Kész vagyok <i class="fa-solid fa-check-double"></i></button>';
+        $output .= '    <button id="lab-check-button" class="lab-check-button">Kész vagyok <i class="fa-solid fa-check-double"></i></button>';
         $output .= '    <div class="lab-check-result" style="margin-top:10px;"></div>';
         $output .= '  </div>';
         $output .= '</div>';
@@ -78,8 +78,9 @@ add_action('admin_notices', 'lab_launcher_shortcode_list_notice');
 function lab_launcher_shortcode_list_notice()
 {
     $screen = get_current_screen();
-    if ($screen->id !== 'toplevel_page_lab-launcher-labs')
+    if ($screen->base !== 'cloud-lab_page_lab-launcher-labs') {
         return;
+    }
 
     $labs = get_option('lab_launcher_labs', []);
     if (empty($labs))
@@ -122,6 +123,7 @@ function lab_launcher_enqueue_script()
                     const labTTL = launcher.dataset.labTtl;
                     const resultBox = launcher.querySelector('.lab-result') || launcher.nextElementSibling;
 
+                    document.getElementById("lab-check-button").style.display = "none";
                     console.log('Küldés indítása:', { labName, cloudProvider, labTTL });
 
                     button.disabled = true;
@@ -147,7 +149,7 @@ function lab_launcher_enqueue_script()
 
                             let username = data.username;
                             if (cloudProvider === 'azure') {
-                                username += '@cloudsteak.com';
+                                username += '@evolvia.hu';
                             }
 
                             let loginLink = '';
@@ -199,6 +201,8 @@ function lab_launcher_enqueue_script()
                                 html = '<span style="color: orange;">Folyamatban...</span>';
                             } else if (data.status === 'success') {
                                 html = '<span style="color: green;">Készen áll</span>';
+                                document.getElementById("lab-check-button").style.display = "block";
+                                document.getElementById("lab-launch-button").disabled = true;
                             } else if (data.status === 'error') {
                                 html = '<span style="color: red;">Hiba történt</span>';
                             }

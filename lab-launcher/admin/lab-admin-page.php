@@ -4,20 +4,31 @@
 add_action('admin_menu', 'lab_launcher_lab_menu');
 function lab_launcher_lab_menu()
 {
+    // FŐMENÜ
     add_menu_page(
-        'Cloud Lab kezelő',
-        'Cloud Lab kezelő',
-        'manage_options',
-        'lab-launcher-labs',
-        'lab_launcher_labs_page',
-        'dashicons-welcome-learn-more',
+        'Cloud Lab',
+        'Cloud Lab',
+        'read', // minden bejelentkezett felhasználónak elérhető
+        'cloud-lab',
+        'lab_launcher_labs_page', // vagy üres callback, ha nem kell főoldal
+        'dashicons-cloud',
         30
+    );
+
+    // ALMENÜ: Lab kezelő
+    add_submenu_page(
+        'cloud-lab',
+        'Lab kezelő',
+        'Lab kezelő',
+        'edit_posts',
+        'lab-launcher-labs',
+        'lab_launcher_labs_page'
     );
 }
 
 function lab_launcher_labs_page()
 {
-    if (!current_user_can('manage_options')) {
+    if (!current_user_can('edit_posts')) {
         return;
     }
 
@@ -50,6 +61,8 @@ function lab_launcher_labs_page()
         $labs[$id] = array(
             'id' => $id,
             'lab_name' => sanitize_text_field($_POST['lab_launcher_lab_name']), // amit a backend kap
+            'lab_title' => sanitize_text_field($_POST['lab_launcher_lab_title']), // amit a felhasználó lát
+            'lab_brief' => sanitize_text_field($_POST['lab_launcher_lab_brief']), // rövid leírás
             'lab_id' => $id, // shortcode ID külön elmentve is, ha kell
             'cloud' => sanitize_text_field($_POST['cloud_provider']),
             'description' => wp_kses_post($_POST['description']),
@@ -84,6 +97,18 @@ function lab_launcher_labs_page()
                     <td><input name="lab_launcher_lab_name" type="text" required class="regular-text"
                             placeholder="pl. basic, vm, vmss"
                             value="<?php echo esc_attr($existing_lab['lab_name'] ?? ''); ?>"></td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="lab_launcher_lab_title">Lab neve (felhasználóknak)</label></th>
+                    <td><input name="lab_launcher_lab_title" type="text" required class="regular-text"
+                            placeholder="pl. Azure VM Lab"
+                            value="<?php echo esc_attr($existing_lab['lab_title'] ?? ''); ?>"></td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="lab_launcher_lab_brief">Rövid leírás</label></th>
+                    <td><input name="lab_launcher_lab_brief" type="text" required class="regular-text"
+                            placeholder="pl. Azure virtuális gép létrehozása"
+                            value="<?php echo esc_attr($existing_lab['lab_brief'] ?? ''); ?>"></td>
                 </tr>
                 <tr>
                     <th scope="row">Kép feltöltése</th>
@@ -153,4 +178,11 @@ function lab_launcher_labs_page()
         });
     </script>
     <?php
+}
+
+
+add_action('admin_menu', 'lab_launcher_remove_duplicate_submenu', 999);
+function lab_launcher_remove_duplicate_submenu()
+{
+    remove_submenu_page('cloud-lab', 'cloud-lab');
 }
