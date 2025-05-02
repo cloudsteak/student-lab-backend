@@ -49,3 +49,25 @@
 .error{
     color: #d12626;
 }
+
+
+.lab-back-button {
+    display: inline-flex;
+    align-items: center;
+    background-color: #0073aa;
+    color: #fff !important;
+    padding: 6px 16px;
+    text-decoration: none;
+    border-radius: 20px;
+    font-weight: 600;
+    transition: background-color 0.2s ease;
+}
+
+.lab-back-button i {
+    margin-right: 8px;
+    font-size: 16px;
+}
+
+.lab-back-button:hover {
+    background-color: #005f8d;
+}

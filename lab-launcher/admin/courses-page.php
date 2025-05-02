@@ -1,7 +1,7 @@
 <?php
 // admin/courses-page.php
 
-add_action('init', function() {
+add_action('init', function () {
     register_post_type('lab_training', [
         'label' => 'Képzések',
         'public' => false,
@@ -26,12 +26,15 @@ add_action('init', function() {
     ]);
 });
 
-add_action('add_meta_boxes', function() {
+
+
+add_action('add_meta_boxes', function () {
     add_meta_box('lab_training_shortcode', 'Shortcode', 'render_shortcode_box', 'lab_training', 'side');
     add_meta_box('lab_training_labs', 'Hozzárendelt Lab-ok', 'render_labs_box', 'lab_training');
 });
 
-function render_labs_box($post) {
+function render_labs_box($post)
+{
     $selected = get_post_meta($post->ID, 'assigned_labs', true) ?: [];
     $labs = get_option('lab_launcher_labs', []);
 
@@ -48,7 +51,7 @@ function render_labs_box($post) {
     echo '</ul>';
 }
 
-add_action('save_post_lab_training', function($post_id) {
+add_action('save_post_lab_training', function ($post_id) {
     if (isset($_POST['assigned_labs'])) {
         update_post_meta($post_id, 'assigned_labs', array_map('sanitize_text_field', $_POST['assigned_labs']));
     } else {
@@ -56,16 +59,18 @@ add_action('save_post_lab_training', function($post_id) {
     }
 });
 
-add_shortcode('lab_training', function($atts) {
+add_shortcode('lab_training', function ($atts) {
     $atts = shortcode_atts(['id' => 0], $atts);
     $post = get_post($atts['id']);
-    if (!$post || $post->post_type !== 'lab_training') return '';
+    if (!$post || $post->post_type !== 'lab_training')
+        return '';
 
     $assigned = get_post_meta($post->ID, 'assigned_labs', true) ?: [];
     $all_labs = get_option('lab_launcher_labs', []);
 
     if (!function_exists('get_user_lab_status')) {
-        function get_user_lab_status($user_id, $lab_id) {
+        function get_user_lab_status($user_id, $lab_id)
+        {
             // Teszt funkció: mindig "not_started"
             return 'not_started';
         }
@@ -76,11 +81,23 @@ add_shortcode('lab_training', function($atts) {
     echo "<h2 style='font-size: 28px; margin-bottom: 1rem;'>Képzés: " . esc_html($post->post_title) . "</h2>";
 
     foreach ($assigned as $lab_id) {
-        if (!isset($all_labs[$lab_id])) continue;
+        if (!isset($all_labs[$lab_id]))
+            continue;
         $lab = $all_labs[$lab_id];
 
         $status = get_user_lab_status(get_current_user_id(), $lab_id); // 'ready', 'in_progress', 'not_started'
-        $icon = ($status === 'ready') ? '✅' : (($status === 'in_progress') ? '⏳' : '▶️');
+        if ($status === 'ready') {
+            $icon = '<i class="fas fa-check-circle" style="color:green;"></i>';
+        } else {
+            $parsed_url = parse_url($_SERVER['REQUEST_URI']);
+            $ref_path = $parsed_url['path'] ?? '';
+            $launch_url = home_url('/labs') . '?id=' . urlencode($lab_id) . '&ref=' . urlencode($ref_path);
+
+            $icon_class = ($status === 'in_progress') ? 'fas fa-spinner fa-spin' : 'fas fa-play-circle';
+            $icon_color = ($status === 'in_progress') ? 'orange' : 'gray';
+            $icon = '<a href="' . $launch_url . '"><i class="' . $icon_class . '" style="color:' . $icon_color . ';"></i></a>';
+        }
+
 
         echo "<div style='border:2px solid #00AAB2;padding:16px;margin-bottom:16px;border-radius:16px;display:flex;align-items:center;'>";
         echo "<div style='font-size: 32px; margin-right: 12px;'>$icon</div>";
@@ -96,6 +113,7 @@ add_shortcode('lab_training', function($atts) {
     return ob_get_clean();
 });
 
-function render_shortcode_box($post) {
+function render_shortcode_box($post)
+{
     echo '<input type="text" readonly value="[lab_training id=' . esc_attr($post->ID) . ']" style="width:100%;">';
 }

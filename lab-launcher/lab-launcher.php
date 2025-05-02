@@ -15,18 +15,25 @@ Text Domain: cloudmentor-lab-launcher
 Domain Path: /languages
 */
 
+
+// Enqueue fájl közvetlenül a fájl elején fusson
+require_once plugin_dir_path(__FILE__) . 'includes/enqueue.php';
+
+
 // Beillesztés: admin oldal, REST API, shortcode, beállítások
 
 // 1. Plugin alap inicializálás
 add_action('plugins_loaded', 'lab_launcher_init');
 function lab_launcher_init()
 {
-    require_once plugin_dir_path(__FILE__) . 'includes/enqueue.php';
+
     require_once plugin_dir_path(__FILE__) . 'includes/shortcode.php';
     require_once plugin_dir_path(__FILE__) . 'includes/api-caller.php';
     require_once plugin_dir_path(__FILE__) . 'admin/lab-admin-page.php';
     require_once plugin_dir_path(__FILE__) . 'includes/settings.php';
     require_once plugin_dir_path(__FILE__) . 'admin/courses-page.php';
+    require_once plugin_dir_path(__FILE__) . 'admin/lab-launch-shortcode.php';
+
 
 }
 
