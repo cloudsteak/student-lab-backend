@@ -138,7 +138,7 @@ function lab_launcher_labs_page()
                     </td>
                 </tr>
                 <tr>
-                    <th scope="row"><label for="description">Leírás</label></th>
+                    <th scope="row"><label for="description">Leírás</label><br><label style="font-weight: 300 !important; font-size: small;">(Oldaltörés: &#60;!-- pagebreak --&#62;)</label></th>
                     <td><?php wp_editor($existing_lab['description'] ?? '', 'description'); ?>
                     </td>
                 </tr>

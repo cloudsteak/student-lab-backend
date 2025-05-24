@@ -11,7 +11,7 @@ function lab_launcher_enqueue_assets() {
         'lab-launcher-style',
         $plugin_url . 'includes/lab-launcher.css',
         [],
-        '1.0'
+        '1.3'
     );
 
     wp_enqueue_style(
