@@ -1,47 +1,180 @@
 .lab-launch-button {
-    background-color: #9A27B6;
-    color: white;
-    padding: 5px 20px;
-    border: none;
-    border-radius: 20px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.2s;
+  background-color: #9a27b6;
+  color: white;
+  padding: 5px 20px;
+  border: none;
+  border-radius: 20px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
 }
 
 .lab-launch-button:hover {
-    background-color: #000000;
+  background-color: #000000;
 }
 
 .lab-launch-button i {
-    margin-left: 6px;
+  margin-left: 6px;
 }
 
+.lab-page-button {
+  width: 200px;
+  border: none;
+  border-radius: 20px;
+  font-size: 14px;
+  padding: 10px 20px 10px 20px !important;
+  background-color: #0073aa;
+  color: #fff !important;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.lab-page-button:hover {
+  background-color: #000000;
+}
 
 .lab-check-button {
-    background-color: #138d0f;
-    color: white;
-    padding: 5px 20px;
-    border: none;
-    border-radius: 20px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.2s;
+  display: none;
+  width: 300px;
+  padding: 10px 20px 10px 20px;
+  background-color: rgba(14, 106, 11, 0.8);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
 }
 
 .lab-check-button:hover {
-    background-color: #000000;
+  background-color: #000000;
 }
 
 .lab-check-button i {
-    margin-left: 6px;
+  margin-left: 6px;
 }
 
-
-.success{
-    color: #138d0f;
+.success {
+  color: #138d0f;
 }
 
-.error{
-    color: #d12626;
+.error {
+  color: #d12626;
+}
+
+.lab-back-button {
+  display: inline-flex;
+  align-items: center;
+  background-color: #0073aa;
+  color: #fff !important;
+  padding: 6px 16px;
+  text-decoration: none;
+  border-radius: 20px;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+}
+
+.lab-back-button i {
+  margin-right: 8px;
+  font-size: 16px;
+}
+
+.lab-back-button:hover {
+  background-color: #000000;
+}
+
+.lab-description {
+  border: none !important;
+  border-radius: 5px;
+  width: 90vw !important;
+  background: rgba(240, 240, 240, 0.8);
+  padding: 5px;
+}
+
+.lab-header {
+  font-weight: 600;
+  font-size: 24px;
+}
+
+.table-lab-header {
+  width: 450px;
+  border: none !important;
+  width: fit-content;
+}
+
+.table-admin-labs {
+  width: 100% !important;
+  border: none !important;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.table-admin-labs tbody tr th{
+    border-radius: 5px;
+}
+.table-admin-labs tbody tr td{
+    border-radius: 5px;
+}
+
+.table-admin-labs tbody tr:nth-of-type(even) {
+  background-color: #dfdfdf;
+}
+
+.table-admin-labs tbody tr:nth-of-type(odd) {
+  background-color: #ffffff;
+}
+
+.table-admin-labs tbody tr:hover {
+  background-color: #4B4BFF !important;
+  color: #ffffff;
+}
+
+.table-lab-login {
+  width: 90vw !important;
+  border: none !important;
+  text-align: center !important;
+  background-color: #c8c8c8;
+  border-radius: 5px;
+  color: rgb(60, 60, 60) !important;
+  margin-bottom: 10px;
+  margin-top: 10px;
+}
+
+.table-lab-result {
+  width: 90vw !important;
+  border: none !important;
+  text-align: center !important;
+}
+
+.table-lab-header > td {
+  text-align: left;
+}
+
+.lab-pagination-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 16px;
+  text-align: center !important;
+}
+.lab-pagination-controls button {
+  padding: 4px 12px;
+}
+
+.lab-admin-button {
+  width: 100px !important;
+  border: none !important;
+  border-radius: 20px !important;
+  background-color: #69cfff !important;
+  color: #000000 !important;
+  padding: 5px 10px 5px 10px !important;
+  transition: background-color 0.3s ease;
+  text-align: center !important;
+  cursor: pointer;
+}
+
+.lab-admin-button:hover {
+  background-color: #000000;
 }

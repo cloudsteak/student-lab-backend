@@ -4,11 +4,12 @@
 add_action('admin_menu', 'lab_launcher_settings_menu');
 function lab_launcher_settings_menu()
 {
-    add_options_page(
+    add_submenu_page(
+        'cloud-lab',
         'Cloud Lab Beállítások',
-        'Cloud Lab Beállítások',
-        'manage_options',
-        'lab-launcher-settings',
+        'Beállítások',
+        'edit_posts',
+        'lab-launcher-settings', // ⬅️ Ebből lesz: ?page=lab-launcher-settings
         'lab_launcher_settings_page'
     );
 }
@@ -39,7 +40,8 @@ function lab_launcher_text_field($args)
     echo "<input type='$type' name='lab_launcher_settings[$name]' value='$value' class='regular-text' />";
 }
 
-function lab_launcher_number_field($args) {
+function lab_launcher_number_field($args)
+{
     $options = get_option('lab_launcher_settings');
     $name = $args['name'];
     $value = esc_attr($options[$name] ?? '30');
@@ -48,10 +50,9 @@ function lab_launcher_number_field($args) {
 
 
 
-function lab_launcher_settings_page()
-{
+function lab_launcher_settings_page() {
     echo '<div class="wrap">';
-    echo '<h1>Lab Launcher Beállítások</h1>';
+    echo '<h1>Cloud Lab Beállítások</h1>';
     echo '<form method="post" action="options.php">';
     settings_fields('lab_launcher_settings_group');
     do_settings_sections('lab-launcher-settings');
