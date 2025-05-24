@@ -142,17 +142,31 @@ function lab_launcher_shortcode_list_notice()
     if (empty($labs))
         return;
 
-    echo '<div class="notice notice-info"><p><strong>Elérhető shortcode-ok:</strong><br>';
+    echo '<div class="notice notice-info"><strong>Elérhető Lab-ok:</strong><br>';
+    echo '<table class="table-admin-labs">';
+    echo '<tr>';
+    echo '<th>Azonosító</th>';
+    echo '<th>Név</th>';
+    echo '<th>Leírás</th>';
+    echo '<th>Felhő</th>';
+    echo '<th colspan=2></th>';
+    echo '</tr>';
     foreach ($labs as $index => $lab) {
-        echo '[lab_launcher id="' . esc_html($lab['id']) . '"] ';
-        echo '<a href="' . esc_url(admin_url('admin.php?page=lab-launcher-labs&edit_lab=' . urlencode($lab['id']))) . '" class="button button-small">Szerkesztés</a>';
-        echo '<form method="post" style="display:inline; margin-left:10px;">
+        echo '<tr>';
+        echo '<td>' . esc_html($lab['id']) . '</td>';
+        echo '<td>' . esc_html($lab['lab_title']) . '</td>';
+        echo '<td>' . esc_html($lab['lab_brief']) . '</td>';
+        echo '<td>' . esc_html($lab['cloud']) . '</td>';
+        echo '<td><a href="' . esc_url(admin_url('admin.php?page=lab-launcher-labs&edit_lab=' . urlencode($lab['id']))) . '" class="button button-small lab-admin-button">Szerkesztés</a></td>';
+        echo '<td><form method="post" style="display:inline; margin-left:10px;">
         <input type="hidden" name="lab_launcher_delete_index" value="' . esc_attr($lab['id']) . '" />
         ' . wp_nonce_field('lab_launcher_delete_lab', '_wpnonce', true, false) . '
-        <input type="submit" class="button button-small" value="Törlés" onclick="return confirm(\'Biztosan törölni szeretnéd ezt a labot?\')">
-        </form><br>';
+        <input type="submit" class="button button-small lab-admin-button" value="Törlés" onclick="return confirm(\'Biztosan törölni szeretnéd ezt a labot?\')">
+        </form></td>';
+        echo '</tr>';
     }
-    echo '</p></div>';
+    echo '</table>';
+    echo '</div>';
 
     // Törlés feldolgozása
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['lab_launcher_delete_index']) && check_admin_referer('lab_launcher_delete_lab')) {
