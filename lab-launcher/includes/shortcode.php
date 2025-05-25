@@ -28,7 +28,7 @@ function lab_launcher_render_shortcode($atts)
 
         // Előre generáljuk a státuszt
         $status_text = '';
-        if ($lab_status === 'pending' || $lab_status === 'unknown') {
+        if ($lab_status === 'pending') {
             $status_text = '<span style="background-color:rgba(255, 255, 0, 0.7); color: black; border-radius:5px;padding:5px 30px 5px 30px;">Folyamatban...</span>';
         } elseif ($lab_status === 'success') {
             $status_text = '<span style="background-color:rgba(0, 0, 255, 0.7); color: white; border-radius:5px;padding:5px 30px 5px 30px;">Elérhető</span>';
@@ -53,6 +53,7 @@ function lab_launcher_render_shortcode($atts)
         $output .= '<td><span class="lab-name"><strong>Lab:</strong> ' . esc_html($lab['lab_name']) . ' (' . strtoupper($lab['cloud']) . ')</span></td>';
         $output .= '<td><button id="lab-launch-button" class="lab-launch-button before-lab-ready">Lab indítása <i class="fa-solid fa-play"></i></button></td>';
         $output .= '<td><span class="lab-status">' . $status_text . '</span></td>';
+        $output .= '<td><span id="lab-countdown" class="lab-counters"></span></td>';
         $output .= '</tr>';
         $output .= '</table>';
 
@@ -64,7 +65,7 @@ function lab_launcher_render_shortcode($atts)
 
         $output .= '<table class="table-lab-result">';
         $output .= '<tr>';
-        $output .= '<td><button id="lab-check-button" class="lab-check-button">Kész vagyok <i class="fa-solid fa-check-double"></i></button></td>';
+        $output .= '<td><button id="lab-check-button" class="lab-check-button">Kész vagyok - Ellenőrzés <i class="fa-solid fa-check-double"></i></button></td>';
         $output .= '</tr>';
         $output .= '<tr>';
         $output .= '<td><div class="lab-check-result" style="margin-top:10px;"></div></td>';
@@ -183,6 +184,11 @@ function lab_launcher_enqueue_script()
 {
     ?>
     <script>
+        // 0. Törlés sessionStorage
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        sessionStorage.setItem(`lab_lab_countdown_${urlParams.get('id')}`, '0');
+        sessionStorage.setItem(`lab_start_countdown_${urlParams.get('id')}`, '0');
         // 1. Indítás kezelése
         document.addEventListener('DOMContentLoaded', function () {
             document.querySelectorAll('.lab-launch-button').forEach(button => {
@@ -217,9 +223,9 @@ function lab_launcher_enqueue_script()
                         const copyIcon = (text) => `<button onclick="navigator.clipboard.writeText('${text.replace(/'/g, "\\'")}')" title="Másolás" style="margin-left:6px;cursor:pointer;background:none;border:none;color:black;"><i class="fa-solid fa-copy"></i></button>`;
 
                     if (res.ok) {
-
-                        const username = data.username;
-                        const password = data.pa
+                        document.getElementById('lab-launch-button').innerHTML = 'Folyamatban <i class="fa-solid fa-hourglass-start"></i>';
+                        let username = data.username;
+                        const password = data.password;
                         if (cloudProvider === 'azure') {
                             username += '@evolvia.hu';
                         }
@@ -232,9 +238,13 @@ function lab_launcher_enqueue_script()
                         }
 
                         sessionStorage.setItem(`lab_user_${labId}`, username);
-                        sessionStorage.setItem(`lab_pass_${labId}`, data.password);
+                        sessionStorage.setItem(`lab_pass_${labId}`, password);
                         sessionStorage.setItem(`lab_uri_${labId}`, loginLink);
                         sessionStorage.setItem(`lab_cloud_${labId}`, cloudProvider);
+                        sessionStorage.setItem(`lab_is_started_${labId}`, '1');
+                        startCountdown(labId, 300, "múlva elérhető a gyakorló környezet.", "Már csak néhány pillanat.");
+
+                        sessionStorage.setItem(`lab_ttl_${labId}`, parseInt(labTTL));
 
 
                         resultBox.innerHTML =
@@ -244,6 +254,7 @@ function lab_launcher_enqueue_script()
                             `<td>Jelszó: <strong>${password}</strong> ${copyIcon(password)}</td>` +
                             `<td>|</td>` +
                             `<td>${loginLink}</td>` +
+                            `</tr><tr>` +
                             `<td colspan=5><span class="before-lab-ready">Hamarosan értesítést kapsz a gyakorló környezet állapotáról.</span></td>` +
                             `</tr></table>` +
                             `<span id="clean-username" hidden="hidden">${username}</span>`;
@@ -274,6 +285,8 @@ function lab_launcher_enqueue_script()
             const password = sessionStorage.getItem(`lab_pass_${labId}`);
             const loginLink = sessionStorage.getItem(`lab_uri_${labId}`);
             const cloudProvider = sessionStorage.getItem(`lab_cloud_${labId}`);
+            const is_started = sessionStorage.getItem(`lab_is_started_${labId}`);
+            const startTime = sessionStorage.getItem(`lab_start_time_${labId}`);
 
             if (username && password && loginLink && cloudProvider && resultBox) {
                 const copyIcon = (text) => `<button onclick="navigator.clipboard.writeText('${text.replace(/'/g, "\\'")}')" title="Másolás" style="margin-left:6px;cursor:pointer;background:none;border:none;color:black;"><i class="fa-solid fa-copy"></i></button>`;
@@ -292,6 +305,7 @@ function lab_launcher_enqueue_script()
                     `<td>Jelszó: <strong>${password}</strong> ${copyIcon(password)}</td>` +
                     `<td>|</td>` +
                     `<td>${loginLink}</td>` +
+                    `</tr><tr>` +
                     `<td colspan=5><span class="before-lab-ready">Hamarosan értesítést kapsz a gyakorló környezet állapotáról.</span></td>` +
                     `</tr></table>` +
                     `<span id="clean-username" hidden="hidden">${username}</span>`;
@@ -310,9 +324,18 @@ function lab_launcher_enqueue_script()
                     const data = await res.json();
                     if (data && data.status) {
                         let html = '';
-                        if (data.status === 'pending' || data.status === 'unknown') {
+
+                        if ((data.status === 'pending') && is_started === '1') {
                             html = '<span style="background-color:rgba(255, 255, 0, 0.7); color: black; border-radius:5px;padding:5px 30px 5px 30px;">Folyamatban...</span>';
+                            document.getElementById('lab-launch-button').innerHTML = 'Folyamatban <i class="fa-solid fa-hourglass-start"></i>';
+                            startCountdown(labId, 180, "múlva elérhető.", "Már csak néhány pillanat.");
                         } else if (data.status === 'success') {
+                            if (!startTime) {
+                                const startTime = new Date().toISOString();
+                                sessionStorage.setItem(`lab_start_time_${labId}`, startTime);
+                            }
+                            const labTTL = sessionStorage.getItem(`lab_ttl_${labId}`);
+                            startLabCountdown(labId, labTTL, " - A lab teljesítésére szánt idő:", "Sajnos lejárt az idő.");
                             html = '<span style="background-color:rgba(0, 0, 255, 0.7); color: white; border-radius:5px;padding:5px 30px 5px 30px;">Elérhető</span>';
                             document.getElementById("lab-check-button").style.display = "inline";
                             document.querySelectorAll('.before-lab-ready').forEach(el => {
@@ -357,7 +380,13 @@ function lab_launcher_enqueue_script()
                 nextBtn.disabled = currentPage >= pages.length - 1;
 
                 // Görgetés a tartalom tetejére
-                desc.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                const queryString = window.location.search;
+                const urlParams = new URLSearchParams(queryString);
+                const labId = urlParams.get('id');
+                const is_started = sessionStorage.getItem(`lab_is_started_${labId}`);
+                if (is_started === '1') {
+                    desc.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
             };
 
             prevBtn.addEventListener('click', () => {
@@ -377,6 +406,93 @@ function lab_launcher_enqueue_script()
             updateView();
         });
     });
+
+
+    // 4. Visszaszámlálás - Várakozás a lab elindulására
+    function startCountdown(labId, labDurationSeconds, countdownMessage, timeIsUpMessage, errorMessage = "A visszaszámlálás nem indult el.") {
+        const countdownElement = document.getElementById("lab-countdown");
+        // const queryString = window.location.search;
+        // const urlParams = new URLSearchParams(queryString);
+        // const labId = urlParams.get('id');
+        const isStarted = sessionStorage.getItem(`lab_is_started_${labId}`);
+        const isLabCountdown = sessionStorage.getItem(`lab_start_countdown_${labId}`);
+
+        if (!isStarted || isLabCountdown === '1') {
+            countdownElement.innerText = `${errorMessage}`;
+            return;
+        }
+
+        const startDate = new Date();
+        const endDate = new Date(startDate.getTime() + labDurationSeconds * 1000);
+
+        const interval = setInterval(() => {
+            const startTime = sessionStorage.getItem(`lab_start_time_${labId}`);
+            if (startTime) {
+                console.log(`Lab elindult: ${startTime}`);
+                return;
+            }
+            sessionStorage.setItem(`lab_start_countdown_${labId}`, '1');
+            const now = new Date();
+            const remaining = endDate - now;
+
+            if (remaining <= 0) {
+                clearInterval(interval);
+                countdownElement.innerText = `${timeIsUpMessage}`;
+                return;
+            }
+
+            const hours = Math.floor((remaining / 1000 / 60 / 60) % 24);
+            const minutes = Math.floor((remaining / 1000 / 60) % 60);
+            const seconds = Math.floor((remaining / 1000) % 60);
+
+            countdownElement.innerText =
+                `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} ${countdownMessage}`;
+        }, 1000);
+    }
+
+    // 5. Visszaszámlálás - Felhasználó értesítése a rendelkezésre álló időről
+    function startLabCountdown(labId, labDurationSeconds, countdownMessage, timeIsUpMessage, errorMessage = "A visszaszámlálás nem indult el.") {
+        const countdownElement = document.getElementById("lab-countdown");
+        // const queryString = window.location.search;
+        // const urlParams = new URLSearchParams(queryString);
+        // const labId = urlParams.get('id');
+        const isLabCountdown = sessionStorage.getItem(`lab_lab_countdown_${labId}`);
+        const startTime = sessionStorage.getItem(`lab_start_time_${labId}`);
+        const isStarted = sessionStorage.getItem(`lab_is_started_${labId}`);
+
+        if (!isStarted || isLabCountdown === '1') {
+            return;
+        }
+
+        if (!startTime) {
+            countdownElement.innerText = `${errorMessage}`;
+            return;
+        }
+
+
+        const startDate = new Date(startTime);
+        const endDate = new Date(startDate.getTime() + labDurationSeconds * 1000);
+
+        const interval = setInterval(() => {
+            sessionStorage.setItem(`lab_lab_countdown_${labId}`, '1');
+            const now = new Date();
+            const remaining = endDate - now;
+
+            if (remaining <= 0) {
+                clearInterval(interval);
+                countdownElement.innerText = `${timeIsUpMessage}`;
+                return;
+            }
+
+            const hours = Math.floor((remaining / 1000 / 60 / 60) % 24);
+            const minutes = Math.floor((remaining / 1000 / 60) % 60);
+            const seconds = Math.floor((remaining / 1000) % 60);
+
+            countdownElement.innerText =
+                `${countdownMessage} ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }, 1000);
+    }
+
 
 
 
@@ -432,7 +548,7 @@ function lab_check_enqueue_script()
                             `<span class=${verifyclass}>${verifyicon}</span>` +
                             `<br><p>${data.message}</p>` +
                             `${data.success !== true ? "<p>- Javítsd ki a hibát, és próbáld újra. - </p>" : ""}
-                                                                    `;
+                                                                                                            `;
                     } else {
                         resultBox.innerHTML = `<span style='color:red;'>Hiba: ${data.message || 'Ismeretlen'}</span>`;
                     }
