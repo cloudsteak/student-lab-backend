@@ -178,3 +178,4 @@ iac/.terraform.lock.hcl
 iac/terraform.tfvars
 .DS_Store
 *.zip
+**/*.sql
