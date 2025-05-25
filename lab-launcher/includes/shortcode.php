@@ -201,7 +201,6 @@ function lab_launcher_enqueue_script()
                     const resultBox = launcher.querySelector('.lab-result') || launcher.nextElementSibling;
 
                     document.getElementById("lab-check-button").style.display = "none";
-                    console.log('Küldés indítása:', { labName, cloudProvider, labTTL });
 
                     button.disabled = true;
                     launcher.querySelector('.lab-status').textContent = 'Indítás folyamatban...';
@@ -330,7 +329,8 @@ function lab_launcher_enqueue_script()
                             document.getElementById('lab-launch-button').innerHTML = 'Folyamatban <i class="fa-solid fa-hourglass-start"></i>';
                             startCountdown(labId, 180, "múlva elérhető.", "Már csak néhány pillanat.");
                         } else if (data.status === 'success') {
-                            if (!startTime) {
+                            const labStartTime = sessionStorage.getItem(`lab_start_time_${labId}`);
+                            if (!labStartTime) {
                                 const startTime = new Date().toISOString();
                                 sessionStorage.setItem(`lab_start_time_${labId}`, startTime);
                             }
@@ -428,7 +428,6 @@ function lab_launcher_enqueue_script()
         const interval = setInterval(() => {
             const startTime = sessionStorage.getItem(`lab_start_time_${labId}`);
             if (startTime) {
-                console.log(`Lab elindult: ${startTime}`);
                 return;
             }
             sessionStorage.setItem(`lab_start_countdown_${labId}`, '1');
@@ -539,7 +538,6 @@ function lab_check_enqueue_script()
 
 
                     if (res.ok) {
-                        console.log("Data", JSON.stringify(data));
                         if (data.success != true) {
                             verifyicon = "<i class='fa-solid fa-triangle-exclamation'></i>";
                             verifyclass = "error";
@@ -548,7 +546,7 @@ function lab_check_enqueue_script()
                             `<span class=${verifyclass}>${verifyicon}</span>` +
                             `<br><p>${data.message}</p>` +
                             `${data.success !== true ? "<p>- Javítsd ki a hibát, és próbáld újra. - </p>" : ""}
-                                                                                                            `;
+                                                                                                                    `;
                     } else {
                         resultBox.innerHTML = `<span style='color:red;'>Hiba: ${data.message || 'Ismeretlen'}</span>`;
                     }
