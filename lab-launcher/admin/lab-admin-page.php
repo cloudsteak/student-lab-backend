@@ -138,8 +138,20 @@ function lab_launcher_labs_page()
                     </td>
                 </tr>
                 <tr>
-                    <th scope="row"><label for="description">Leírás</label><br><label style="font-weight: 300 !important; font-size: small;">(Oldaltörés: &#60;!-- pagebreak --&#62;)</label></th>
-                    <td><?php wp_editor($existing_lab['description'] ?? '', 'description'); ?>
+                    <th scope="row"><label for="description">Leírás</label><br><label
+                            style="font-weight: 300 !important; font-size: small;">(Oldaltörés: &#60;!-- pagebreak
+                            --&#62;)</label></th>
+                    <td><?php wp_editor(
+                        $existing_lab['description'] ?? '',
+                        'description',
+                        [
+                            'textarea_name' => 'description',
+                            'media_buttons' => true, // EZ KELL A MÉDIA GOMBHOZ
+                            'textarea_rows' => 10,
+                            'tinymce' => true,
+                            'quicktags' => true
+                        ]
+                    ); ?>
                     </td>
                 </tr>
 

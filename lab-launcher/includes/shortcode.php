@@ -51,7 +51,7 @@ function lab_launcher_render_shortcode($atts)
         $output .= '<table class="table-lab-header">';
         $output .= '<tr>';
         $output .= '<td><span class="lab-name"><strong>Lab:</strong> ' . esc_html($lab['lab_name']) . ' (' . strtoupper($lab['cloud']) . ')</span></td>';
-        $output .= '<td><button id="lab-launch-button" class="lab-launch-button before-lab-ready">Lab indítása <i class="fa-solid fa-play"></i></button></td>';
+        $output .= '<td><button id="lab-launch-button" class="lab-launch-button before-lab-ready">Kezdés <i class="fa-solid fa-play"></i></button></td>';
         $output .= '<td><span class="lab-status">' . $status_text . '</span></td>';
         $output .= '<td><span id="lab-countdown" class="lab-counters"></span></td>';
         $output .= '</tr>';
@@ -63,18 +63,9 @@ function lab_launcher_render_shortcode($atts)
                     data-lab="' . esc_attr($lab['lab_name']) . '" 
                     data-cloud="' . esc_attr($lab['cloud']) . '" >';
 
-        $output .= '<table class="table-lab-result">';
-        $output .= '<tr>';
-        $output .= '<td><button id="lab-check-button" class="lab-check-button">Kész vagyok - Ellenőrzés <i class="fa-solid fa-check-double"></i></button></td>';
-        $output .= '</tr>';
-        $output .= '<tr>';
-        $output .= '<td><div class="lab-check-result" style="margin-top:10px;"></div></td>';
-        $output .= '</tr>';
-        $output .= '</table>';
-
+        
         $output .= '  </div>';
         $output .= '</div>';
-        //$output .= '<div class="lab-description">' . wp_kses_post($lab['description']) . '</div>';
         $output .= '<div class="lab-description paginated">';
         $output .= '  <div class="lab-page-group">';
 
@@ -108,6 +99,14 @@ function lab_launcher_render_shortcode($atts)
 
         $refresh_interval = intval(get_option('lab_launcher_settings')['status_refresh_interval'] ?? 30);
         $output .= '<script>window.labLauncherRefreshInterval = ' . $refresh_interval . ';</script>';
+        $output .= '<table class="table-lab-result">';
+        $output .= '<tr>';
+        $output .= '<td><button id="lab-check-button" class="lab-check-button">Kész vagyok - Ellenőrzés <i class="fa-solid fa-check-double"></i></button></td>';
+        $output .= '</tr>';
+        $output .= '<tr>';
+        $output .= '<td><div class="lab-check-result" style="margin-top:10px;"></div></td>';
+        $output .= '</tr>';
+        $output .= '</table>';
 
         add_action('wp_enqueue_scripts', function () {
             global $lab_launcher_user_email;
@@ -231,9 +230,9 @@ function lab_launcher_enqueue_script()
 
                         let loginLink = '';
                         if (cloudProvider === 'azure') {
-                            loginLink = `<a href="https://portal.azure.com" target="_blank" rel="noopener noreferrer">Belépés a laborba (Azure) <i class="fa-solid fa-up-right-from-square"></i></a><br>`;
+                            loginLink = `<a href="https://portal.azure.com" target="_blank" rel="noopener noreferrer">Azure Portál <i class="fa-solid fa-up-right-from-square"></i></a><br>`;
                         } else if (cloudProvider === 'aws') {
-                            loginLink = `<a href="https://cloudsteak.signin.aws.amazon.com/console" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-up-right-from-square"></i> Belépés a laborba (AWS)</a><br>`;
+                            loginLink = `<a href="https://cloudsteak.signin.aws.amazon.com/console" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-up-right-from-square"></i> AWS Console (AWS)</a><br>`;
                         }
 
                         sessionStorage.setItem(`lab_user_${labId}`, username);
@@ -292,9 +291,9 @@ function lab_launcher_enqueue_script()
 
                 let loginLink = '';
                 if (cloudProvider === 'azure') {
-                    loginLink = `<a href="https://portal.azure.com" target="_blank" rel="noopener noreferrer">Belépés a laborba (Azure) <i class="fa-solid fa-up-right-from-square"></i></a><br>`;
+                    loginLink = `<a href="https://portal.azure.com" target="_blank" rel="noopener noreferrer">Azure Portál <i class="fa-solid fa-up-right-from-square"></i></a><br>`;
                 } else if (cloudProvider === 'aws') {
-                    loginLink = `<a href="https://cloudsteak.signin.aws.amazon.com/console" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-up-right-from-square"></i> Belépés a laborba (AWS)</a><br>`;
+                    loginLink = `<a href="https://cloudsteak.signin.aws.amazon.com/console" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-up-right-from-square"></i> AWS Console</a><br>`;
                 }
 
                 resultBox.innerHTML =
