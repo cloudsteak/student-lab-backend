@@ -3,13 +3,23 @@
 # --- main.tf ---
 
 provider "azurerm" {
-  features {}
+  features {
+    key_vault {
+      purge_soft_delete_on_destroy = true
+      recover_soft_deleted_secrets = true
+    }
+  }
+
+  subscription_id = var.azure_subscription_id
+  tenant_id       = var.azure_tenant_id
 }
 
 provider "kubernetes" {
   config_path    = var.kubeconfig_path
   config_context = var.kubeconfig_context
 }
+
+data "azurerm_client_config" "current" {}
 
 resource "kubernetes_namespace" "lab_ns" {
   metadata {
@@ -120,7 +130,7 @@ resource "kubernetes_deployment" "lab_backend" {
           }
           env {
             name  = "REDIS_DB"
-            value = "0"
+            value = "1"
           }
 
 
@@ -316,3 +326,102 @@ resource "kubernetes_ingress_v1" "lab_backend" {
     }
   }
 }
+
+
+###############################
+# Azure Key Vault to store secrets
+###############################
+
+resource "azurerm_resource_group" "lab_rg" {
+  name     = var.azurerm_resource_groups["name"]
+  location = var.azurerm_resource_groups["location"]
+  tags     = var.azure_default_tags
+}
+
+resource "azurerm_key_vault" "lab_kv" {
+  name                            = "evolvia-primary"
+  location                        = var.azurerm_resource_groups["location"]
+  resource_group_name             = var.azurerm_resource_groups["name"]
+  tenant_id                       = var.azure_tenant_id
+  sku_name                        = "standard"
+  purge_protection_enabled        = false
+  soft_delete_retention_days      = 7
+  enabled_for_disk_encryption     = true
+  enabled_for_deployment          = true
+  enabled_for_template_deployment = true
+
+  access_policy {
+    tenant_id = var.azure_tenant_id
+    object_id = data.azurerm_client_config.current.object_id
+
+    key_permissions = [
+      "Create",
+      "Get",
+    ]
+
+    secret_permissions = [
+      "Get",
+      "List",
+      "Set",
+      "Delete",
+      "Recover",
+      "Backup",
+      "Restore",
+      "Purge",
+    ]
+  }
+  tags = var.azure_default_tags
+
+  timeouts {
+    create = "10m"
+    delete = "30m"
+  }
+}
+
+
+## Storing secrets in Azure Key Vault
+resource "azurerm_key_vault_secret" "brevo_api_key" {
+  name         = "brevo-api-key"
+  value        = var.brevo_api_key
+  key_vault_id = azurerm_key_vault.lab_kv.id
+}
+
+resource "azurerm_key_vault_secret" "auth0_domain" {
+  name         = "auth0-domain"
+  value        = var.auth0_domain
+  key_vault_id = azurerm_key_vault.lab_kv.id
+}
+
+resource "azurerm_key_vault_secret" "auth0_lab_automation_client_id" {
+  name         = "auth0-lab-automation-client-id"
+  value        = var.auth0_lab_automation_client_id
+  key_vault_id = azurerm_key_vault.lab_kv.id
+
+}
+
+resource "azurerm_key_vault_secret" "auth0_lab_automation_client_secret" {
+  name         = "auth0-lab-automation-client-secret"
+  value        = var.auth0_lab_automation_client_secret
+  key_vault_id = azurerm_key_vault.lab_kv.id
+
+}
+resource "azurerm_key_vault_secret" "github_token" {
+  name         = "github-token"
+  value        = var.github_token
+  key_vault_id = azurerm_key_vault.lab_kv.id
+}
+
+resource "azurerm_key_vault_secret" "auth0_audience" {
+  name         = "auth0-audience"
+  value        = var.auth0_audience
+  key_vault_id = azurerm_key_vault.lab_kv.id
+}
+
+resource "azurerm_key_vault_secret" "wordpress_secret_key" {
+  name         = "wordpress-secret-key"
+  value        = var.wordpress_secret_key
+  key_vault_id = azurerm_key_vault.lab_kv.id
+}
+
+
+
