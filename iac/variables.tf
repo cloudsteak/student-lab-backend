@@ -104,3 +104,24 @@ variable "azure_client_secret" {
   type        = string
   description = "value of the azure client secret"
 }
+
+variable "azurerm_resource_groups" {
+  type        = map(string)
+  description = "Map of Azure resource group properties"
+  default = {
+    "name"     = "lab-central"
+    "location" = "swedencentral"
+  }
+}
+
+
+variable "azure_default_tags" {
+  type        = map(string)
+  description = "Default tags to apply to Azure resources"
+  default = {
+    "Environment" = "Education"
+    "Owner"       = "Cloudmentor"
+    "Project"     = "Evolvia"
+    "CostCenter"  = "CloudSteak"
+  }
+}
