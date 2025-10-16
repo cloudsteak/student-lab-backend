@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: PageGuard (CloudMentor)
-Plugin URI: https://github.com/the1bit/student-lab-backend/tree/main/page-guard
+Plugin URI: https://github.com/the1bit/student-lab-backend/tree/main/wordpress/page-guard
 Description: Oldalak és bejegyzések védelme — csak bejelentkezett felhasználók láthatják. Kivételként megadható néhány oldal, illetve beállítható az átirányítás céloldala.
 Version: 0.0.3-alpha
 Author: CloudMentor
