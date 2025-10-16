@@ -1,9 +1,9 @@
 <?php
 /*
-Plugin Name: CloudMentor Lab Launcher
+Plugin Name: Lab Launcher (CloudMentor)
 Plugin URI: https://github.com/the1bit/student-lab-backend/tree/main/lab-launcher
 Description: WordPress plugin a CloudMentor Lab indításhoz (Azure, AWS).
-Version: 0.0.18-alpha
+Version: 0.0.19-alpha
 Author: CloudMentor
 Author URI: https://cloudmentor.hu
 License: MIT
