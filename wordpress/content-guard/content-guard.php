@@ -1,9 +1,9 @@
 <?php
 /*
-Plugin Name: PageGuard (CloudMentor)
-Plugin URI: https://github.com/the1bit/student-lab-backend/tree/main/wordpress/page-guard
-Description: Oldalak és bejegyzések védelme — csak bejelentkezett felhasználók láthatják. Kivételként megadható néhány oldal, illetve beállítható az átirányítás céloldala.
-Version: 0.0.3-alpha
+Plugin Name: Content Guard (CloudMentor)
+Plugin URI: https://github.com/the1bit/student-lab-backend/tree/main/wordpress/content-guard
+Description: Oldalak és bejegyzések védelme — csak bejelentkezett felhasználók láthatják. Kivételként megadható néhány oldal és bejegyzés-kategória, illetve beállítható az átirányítás céloldala.
+Version: 0.0.5
 Author: CloudMentor
 Author URI: https://cloudmentor.hu
 License: MIT
@@ -11,17 +11,18 @@ License URI: https://opensource.org/licenses/MIT
 Requires at least: 6.2
 Tested up to: 6.7.2
 Requires PHP: 8.0
-Text Domain: cloudmentor-page-guard
+Text Domain: cloudmentor-content-guard
 Domain Path: /languages
 */
 
 
 if ( ! defined('ABSPATH') ) { exit; }
 
-class PageGuard {
-    const OPT_EXCEPTIONS         = 'pageguard_exceptions';          // page IDs
-    const OPT_REDIRECT           = 'pageguard_redirect_page';       // page ID
-    const OPT_POST_CAT_EXCEPTIONS= 'pageguard_post_cat_exceptions'; // category term IDs
+class Content_Guard {
+    // Megőrizzük a régi opcióneveket, hogy a PageGuard-ból átjöjjenek a beállítások
+    const OPT_EXCEPTIONS          = 'pageguard_exceptions';          // page IDs
+    const OPT_REDIRECT            = 'pageguard_redirect_page';       // page ID
+    const OPT_POST_CAT_EXCEPTIONS = 'pageguard_post_cat_exceptions'; // category term IDs
 
     public function __construct() {
         add_action('plugins_loaded', [$this, 'load_textdomain']);
@@ -31,15 +32,15 @@ class PageGuard {
     }
 
     public function load_textdomain() {
-        load_plugin_textdomain('pageguard', false, dirname(plugin_basename(__FILE__)) . '/languages');
+        load_plugin_textdomain('content-guard', false, dirname(plugin_basename(__FILE__)) . '/languages');
     }
 
     public function add_settings_page() {
         add_options_page(
-            __('PageGuard beállítások', 'pageguard'),
-            __('Page Guard (CloudMentor)', 'pageguard'),
+            __('Content Guard beállítások', 'content-guard'),
+            __('Content Guard', 'content-guard'),
             'manage_options',
-            'pageguard-settings',
+            'content-guard-settings',
             [$this, 'render_settings_page']
         );
     }
@@ -47,7 +48,7 @@ class PageGuard {
     public function register_settings() {
         // Oldal-kivételek
         register_setting(
-            'pageguard_settings',
+            'content_guard_settings',
             self::OPT_EXCEPTIONS,
             [
                 'type'              => 'array',
@@ -63,7 +64,7 @@ class PageGuard {
 
         // Átirányítási oldal
         register_setting(
-            'pageguard_settings',
+            'content_guard_settings',
             self::OPT_REDIRECT,
             [
                 'type'              => 'integer',
@@ -77,13 +78,13 @@ class PageGuard {
 
         // Bejegyzés-kategória kivételek
         register_setting(
-            'pageguard_settings',
+            'content_guard_settings',
             self::OPT_POST_CAT_EXCEPTIONS,
             [
                 'type'              => 'array',
                 'sanitize_callback' => function($val){
                     $val = is_array($val) ? array_map('intval', $val) : [];
-                    // Csak létező 'category' taxonómia ID-k maradjanak
+                    $val = array_unique($val);
                     return array_values(array_filter($val, function($term_id){
                         $term = get_term($term_id, 'category');
                         return $term && ! is_wp_error($term);
@@ -94,36 +95,36 @@ class PageGuard {
         );
 
         add_settings_section(
-            'pageguard_section_main',
-            __('Általános beállítások', 'pageguard'),
+            'content_guard_section_main',
+            __('Általános beállítások', 'content-guard'),
             function(){
-                echo '<p>'.esc_html__('Állítsd be az oldal- és kategóriakivételeket, illetve az átirányítás céloldalát.', 'pageguard').'</p>';
+                echo '<p>'.esc_html__('Állítsd be az oldal- és kategóriakivételeket, illetve az átirányítás céloldalát.', 'content-guard').'</p>';
             },
-            'pageguard_settings'
+            'content_guard_settings'
         );
 
         add_settings_field(
-            'pageguard_exceptions',
-            __('Kivételként engedélyezett oldalak', 'pageguard'),
+            'content_guard_exceptions',
+            __('Kivételként engedélyezett oldalak', 'content-guard'),
             [$this, 'field_exceptions'],
-            'pageguard_settings',
-            'pageguard_section_main'
+            'content_guard_settings',
+            'content_guard_section_main'
         );
 
         add_settings_field(
-            'pageguard_post_cat_exceptions',
-            __('Kivételként engedélyezett bejegyzés-kategóriák', 'pageguard'),
+            'content_guard_post_cat_exceptions',
+            __('Kivételként engedélyezett bejegyzés-kategóriák', 'content-guard'),
             [$this, 'field_post_cat_exceptions'],
-            'pageguard_settings',
-            'pageguard_section_main'
+            'content_guard_settings',
+            'content_guard_section_main'
         );
 
         add_settings_field(
-            'pageguard_redirect_page',
-            __('Átirányítás céloldala', 'pageguard'),
+            'content_guard_redirect_page',
+            __('Átirányítás céloldala', 'content-guard'),
             [$this, 'field_redirect'],
-            'pageguard_settings',
-            'pageguard_section_main'
+            'content_guard_settings',
+            'content_guard_section_main'
         );
     }
 
@@ -140,7 +141,7 @@ class PageGuard {
             );
         }
         echo '</select>';
-        echo '<p class="description">'.esc_html__('A kiválasztott oldalak bejelentkezés nélkül is megtekinthetők.', 'pageguard').'</p>';
+        echo '<p class="description">'.esc_html__('A kiválasztott oldalak bejelentkezés nélkül is megtekinthetők.', 'content-guard').'</p>';
     }
 
     public function field_post_cat_exceptions() {
@@ -161,14 +162,14 @@ class PageGuard {
             }
         }
         echo '</select>';
-        echo '<p class="description">'.esc_html__('A kiválasztott kategóriákba tartozó bejegyzések bejelentkezés nélkül is megtekinthetők.', 'pageguard').'</p>';
+        echo '<p class="description">'.esc_html__('A kiválasztott kategóriákba tartozó bejegyzések bejelentkezés nélkül is megtekinthetők.', 'content-guard').'</p>';
     }
 
     public function field_redirect() {
         $current = intval(get_option(self::OPT_REDIRECT, 0));
         $pages = get_pages(['post_status' => ['publish','private','draft']]);
         echo '<select name="'.esc_attr(self::OPT_REDIRECT).'" style="min-width:320px;">';
-        echo '<option value="0">'.esc_html__('— Válassz oldalt —', 'pageguard').'</option>';
+        echo '<option value="0">'.esc_html__('— Válassz oldalt —', 'content-guard').'</option>';
         foreach ($pages as $p) {
             printf(
                 '<option value="%d"%s>%s</option>',
@@ -178,23 +179,23 @@ class PageGuard {
             );
         }
         echo '</select>';
-        echo '<p class="description">'.esc_html__('Nem bejelentkezett felhasználók ide lesznek átirányítva, ha védett tartalmat nyitnának meg.', 'pageguard').'</p>';
+        echo '<p class="description">'.esc_html__('Nem bejelentkezett felhasználók ide lesznek átirányítva, ha védett tartalmat nyitnának meg.', 'content-guard').'</p>';
     }
 
     public function render_settings_page() {
         if ( ! current_user_can('manage_options') ) return; ?>
         <div class="wrap">
-            <h1><?php echo esc_html__('PageGuard beállítások', 'pageguard'); ?></h1>
+            <h1><?php echo esc_html__('Content Guard beállítások', 'content-guard'); ?></h1>
             <form method="post" action="options.php">
                 <?php
-                    settings_fields('pageguard_settings');
-                    do_settings_sections('pageguard_settings');
-                    submit_button(__('Mentés', 'pageguard'));
+                    settings_fields('content_guard_settings');
+                    do_settings_sections('content_guard_settings');
+                    submit_button(__('Mentés', 'content-guard'));
                 ?>
             </form>
             <hr />
-            <p><strong><?php echo esc_html__('Megjegyzés:', 'pageguard'); ?></strong>
-                <?php echo esc_html__('A plugin a bejegyzéseket és az oldalakat védi. Kivétel oldalakon és bejegyzés-kategóriákon állítható. Átirányításkor elkerüljük a hurkokat.', 'pageguard'); ?>
+            <p><strong><?php echo esc_html__('Megjegyzés:', 'content-guard'); ?></strong>
+                <?php echo esc_html__('A plugin a bejegyzéseket és az oldalakat védi. Kivétel oldalakon és bejegyzés-kategóriákon állítható. Átirányításkor elkerüljük a hurkokat.', 'content-guard'); ?>
             </p>
         </div>
     <?php }
@@ -210,7 +211,7 @@ class PageGuard {
 
         // Csak oldalak és klasszikus bejegyzések érdekelnek
         $is_page = is_page();
-        $is_post = is_singular('post'); // HELYES: bejegyzés egyedi nézete
+        $is_post = is_singular('post'); // bejegyzés egyedi nézete
 
         if ( ! $is_page && ! $is_post ) {
             return;
@@ -221,25 +222,18 @@ class PageGuard {
             return;
         }
 
-        $redirect_id   = intval(get_option(self::OPT_REDIRECT, 0));
-        if ( $redirect_id <= 0 ) {
-            // Nincs beállított cél: ne zárjunk ki mindent amíg nincs konfigurálva
-            return;
-        }
+        $redirect_id = intval(get_option(self::OPT_REDIRECT, 0));
+        if ( $redirect_id <= 0 ) { return; }
 
         $current_id = get_queried_object_id();
 
         // Ha az aktuális oldal maga az átirányítás célja → ne okozzunk hurkot
-        if ( $current_id === $redirect_id ) {
-            return;
-        }
+        if ( $current_id === $redirect_id ) { return; }
 
         // OLDAL: ha kivétel, engedjük
         if ( $is_page ) {
             $page_exceptions = get_option(self::OPT_EXCEPTIONS, []);
-            if ( in_array($current_id, $page_exceptions, true) ) {
-                return;
-            }
+            if ( in_array($current_id, $page_exceptions, true) ) { return; }
         }
 
         // BEJEGYZÉS: ha bármelyik kategóriája a kivétellistában van, engedjük
@@ -250,7 +244,7 @@ class PageGuard {
                 if ( $terms && ! is_wp_error($terms) ) {
                     $post_cat_ids = array_map(fn($t)=>intval($t->term_id), $terms);
                     if ( array_intersect($post_cat_ids, array_map('intval', $cat_exceptions)) ) {
-                        return; // legalább egy egyezik → engedjük
+                        return;
                     }
                 }
             }
@@ -267,4 +261,4 @@ class PageGuard {
     }
 }
 
-new PageGuard();
+new Content_Guard();
