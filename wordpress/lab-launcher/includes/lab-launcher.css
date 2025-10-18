@@ -87,7 +87,7 @@
 .lab-description {
   border: none !important;
   border-radius: 5px;
-  width: 90vw !important;
+  width: 85vw !important;
   background: rgba(240, 240, 240, 0.8);
   padding: 5px;
 }
@@ -133,7 +133,7 @@
 }
 
 .table-lab-login {
-  width: 90vw !important;
+  width: 85vw !important;
   border: none !important;
   text-align: center !important;
   background-color: #c8c8c8;
@@ -144,7 +144,7 @@
 }
 
 .table-lab-result {
-  width: 90vw !important;
+  width: 85vw !important;
   border: none !important;
   text-align: center !important;
   padding-top: 16px;
