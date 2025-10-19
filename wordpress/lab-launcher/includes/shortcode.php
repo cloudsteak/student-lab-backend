@@ -63,7 +63,7 @@ function lab_launcher_render_shortcode($atts)
                     data-lab="' . esc_attr($lab['lab_name']) . '" 
                     data-cloud="' . esc_attr($lab['cloud']) . '" >';
 
-        
+
         $output .= '  </div>';
         $output .= '</div>';
         $output .= '<div class="lab-description paginated">';
@@ -507,12 +507,11 @@ function lab_check_enqueue_script()
     document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('.lab-check-button').forEach(button => {
             button.addEventListener('click', async () => {
-                const checker = button.closest('.lab-checker');
+                const checker = document.querySelectorAll('.lab-checker')[0];
                 const labName = checker.dataset.lab;
                 const cloudProvider = checker.dataset.cloud;
                 const username = document.getElementById("clean-username")?.textContent;
                 const resultBox = checker.querySelector('.lab-check-result') || checker.nextElementSibling;
-
 
                 console.log('Ellenőrzés indítása:', { labName, cloudProvider, username });
 
@@ -545,7 +544,7 @@ function lab_check_enqueue_script()
                             `<span class=${verifyclass}>${verifyicon}</span>` +
                             `<br><p>${data.message}</p>` +
                             `${data.success !== true ? "<p>- Javítsd ki a hibát, és próbáld újra. - </p>" : ""}
-                                                                                                                    `;
+                                                                                                                        `;
                     } else {
                         resultBox.innerHTML = `<span style='color:red;'>Hiba: ${data.message || 'Ismeretlen'}</span>`;
                     }
