@@ -1,12 +1,13 @@
 .lab-launch-button {
   background-color: #9a27b6;
   color: white;
-  padding: 5px 20px;
+  padding: 12px 36px;
   border: none;
   border-radius: 20px;
   font-size: 16px;
   cursor: pointer;
   transition: background-color 0.3s;
+  margin-left: 32px;
 }
 
 .lab-launch-button:hover {
@@ -32,7 +33,6 @@
 .lab-page-button:hover {
   background-color: #000000;
 }
-
 
 .lab-check-button {
   display: none;
@@ -73,6 +73,7 @@
   border-radius: 20px;
   font-weight: 600;
   transition: background-color 0.3s ease;
+  margin-bottom: 32px;
 }
 
 .lab-back-button i {
@@ -97,6 +98,10 @@
   font-size: 24px;
 }
 
+.lab-name {
+  font-style: italic;
+}
+
 .table-lab-header {
   width: 450px;
   border: none !important;
@@ -112,11 +117,11 @@
   text-align: center;
 }
 
-.table-admin-labs tbody tr th{
-    border-radius: 5px;
+.table-admin-labs tbody tr th {
+  border-radius: 5px;
 }
-.table-admin-labs tbody tr td{
-    border-radius: 5px;
+.table-admin-labs tbody tr td {
+  border-radius: 5px;
 }
 
 .table-admin-labs tbody tr:nth-of-type(even) {
@@ -128,7 +133,7 @@
 }
 
 .table-admin-labs tbody tr:hover {
-  background-color: #4B4BFF !important;
+  background-color: #4b4bff !important;
   color: #ffffff;
 }
 
