@@ -74,6 +74,7 @@
   font-weight: 600;
   transition: background-color 0.3s ease;
   margin-bottom: 32px;
+  margin-top: 32px;
 }
 
 .lab-back-button i {
@@ -88,7 +89,7 @@
 .lab-description {
   border: none !important;
   border-radius: 5px;
-  width: 85vw !important;
+  width: 90vw !important;
   background: rgba(240, 240, 240, 0.8);
   padding: 5px;
 }
