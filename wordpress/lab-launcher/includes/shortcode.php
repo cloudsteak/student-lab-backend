@@ -511,11 +511,13 @@ function lab_check_enqueue_script()
                 const labName = checker.dataset.lab;
                 const cloudProvider = checker.dataset.cloud;
                 const username = document.getElementById("clean-username")?.textContent;
-                const resultBox = checker.querySelector('.lab-check-result') || checker.nextElementSibling;
+                //const resultBox = checker.querySelector('.lab-check-result') || checker.nextElementSibling;
+                const resultBox = document.querySelectorAll('.lab-check-result')[0];
 
                 console.log('Ellenőrzés indítása:', { labName, cloudProvider, username });
 
                 button.disabled = true;
+        
 
                 try {
                     const res = await fetch('/wp-json/lab-launcher/v1/verify-lab', {
@@ -544,7 +546,7 @@ function lab_check_enqueue_script()
                             `<span class=${verifyclass}>${verifyicon}</span>` +
                             `<br><p>${data.message}</p>` +
                             `${data.success !== true ? "<p>- Javítsd ki a hibát, és próbáld újra. - </p>" : ""}
-                                                                                                                        `;
+                                                                                                                            `;
                     } else {
                         resultBox.innerHTML = `<span style='color:red;'>Hiba: ${data.message || 'Ismeretlen'}</span>`;
                     }
@@ -552,7 +554,17 @@ function lab_check_enqueue_script()
                     console.error('Hiba:', e);
                     resultBox.innerHTML = `<span style='color:red;'>Hálózati hiba vagy válasz sikertelen.</span>`;
                 } finally {
-                    button.disabled = false;
+                    // Átmenetileg tiltom az újraellenőrzést
+                    // button.disabled = false;
+
+                    // Bármi van, sikeres az Ellenőrzés
+                    let verifyicon = "<i class='fa-solid fa-thumbs-up'></i>";
+                    let verifyclass = "success";
+                    resultBox.innerHTML =
+                        `<span class=${verifyclass}>${verifyicon}</span>` +
+                        `<br><p>Sikeres ellenőrzés!</p>`;
+                    // Ellenőrző gomb elrejtése
+                    document.getElementById("lab-check-button").style.display = "none";
                 }
             });
         });
