@@ -50,8 +50,8 @@ function lab_launcher_render_shortcode($atts)
                     data-lab-ttl="' . esc_attr($lab['lab_ttl']) . '">';
         $output .= '<table class="table-lab-header">';
         $output .= '<tr>';
-        $output .= '<td><span class="lab-name"><strong>Lab:</strong> ' . esc_html($lab['lab_name']) . ' (' . strtoupper($lab['cloud']) . ')</span></td>';
         $output .= '<td><button id="lab-launch-button" class="lab-launch-button before-lab-ready">Kezdés <i class="fa-solid fa-play"></i></button></td>';
+        $output .= '<td><span class="lab-name">(' . esc_html($lab['lab_name']) . ' - ' . strtoupper($lab['cloud']) . ')</span></td>';
         $output .= '<td><span class="lab-status">' . $status_text . '</span></td>';
         $output .= '<td><span id="lab-countdown" class="lab-counters"></span></td>';
         $output .= '</tr>';
