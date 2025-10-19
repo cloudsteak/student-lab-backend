@@ -19,7 +19,7 @@ def send_lab_ready_email(username: str, password: str, recipient: str, cloud_pro
 
     api_instance = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(configuration))
     subject = "A labor környezeted elkészült!"
-    sender = {"name": "CloudMentor", "email": os.getenv("EMAIL_SENDER")}
+    sender = {"name": "Evolvia", "email": os.getenv("EMAIL_SENDER")}
     to = [{"email": recipient}]
     html_content = f"""
     <p>Helló!</p>
