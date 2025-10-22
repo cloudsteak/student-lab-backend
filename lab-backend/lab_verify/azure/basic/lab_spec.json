@@ -2,20 +2,13 @@
   "cloud": "azure",
   "checks": {
     "vm": {
-      "name": "lab-vm-01",
-      "size": "Standard_F1s",
-      "os_disk_size": 30,
-      "os_disk_type": "StandardSSD_LRS",
+      "prefix": "linux-",
+      "size": "Standard_B1s",
       "os_type": "Linux",
-      "image": {
-        "publisher": "canonical",
-        "offer": "0001-com-ubuntu-server-jammy",
-        "sku": "22_04-lts-gen2",
-        "version": "latest"
-      }
+      "count": 1
     },
     "vnet": {
-      "name": "lab-vm-01-vnet"
+      "prefix": "halozat-"
     }
   }
 }

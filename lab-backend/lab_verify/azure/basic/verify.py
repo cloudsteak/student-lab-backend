@@ -6,9 +6,10 @@ from azure.mgmt.network import NetworkManagementClient
 from azure.core.exceptions import ResourceNotFoundError
 import logging
 
+
 def run_verification(user: str, lab: str, email: str, subscription_id: str) -> dict:
     try:
-        resource_group = f"{user}-{lab}-rg"
+        resource_group = f"{user}"
         spec_path = Path(__file__).parent / "lab_spec.json"
 
         with open(spec_path, "r", encoding="utf-8") as f:
@@ -22,38 +23,59 @@ def run_verification(user: str, lab: str, email: str, subscription_id: str) -> d
         # ✅ VM ellenőrzés
         vm_spec = checks["vm"]
         try:
-            vm = compute.virtual_machines.get(resource_group, vm_spec["name"])
+            # Listázd az összes VM-et a resource groupban
+            vms = compute.virtual_machines.list(resource_group)
+            matching_vms = [v for v in vms if v.name.startswith(vm_spec["prefix"])]
+
+            # Ellenőrizd, hogy a megfelelő számú VM létezik-e
+            if len(matching_vms) < vm_spec["count"]:
+                return {
+                    "success": False,
+                    "message": f"Nem található elegendő VM, amely '{vm_spec['prefix']}' prefixszel kezdődik a resource groupban '{resource_group}'. Elvárt: {vm_spec['count']}, Talált: {len(matching_vms)}",
+                }
+
+            # Ellenőrizd az egyes VM-ek méretét és OS típusát
+            for vm in matching_vms:
+                if vm.hardware_profile.vm_size != vm_spec["size"]:
+                    return {
+                        "success": False,
+                        "message": f"VM méret hibás: {vm.name} - {vm.hardware_profile.vm_size}",
+                    }
+
+                if vm.storage_profile.os_disk.os_type != vm_spec["os_type"]:
+                    return {
+                        "success": False,
+                        "message": f"OS típus hibás: {vm.name} - {vm.storage_profile.os_disk.os_type}",
+                    }
+
         except ResourceNotFoundError:
-            return {"success": False, "message": f"VM '{vm_spec['name']}' nem található a resource groupban '{resource_group}'."}
-
-        if vm.hardware_profile.vm_size != vm_spec["size"]:
-            return {"success": False, "message": f"VM méret hibás: {vm.hardware_profile.vm_size}"}
-
-        if vm.storage_profile.os_disk.disk_size_gb != vm_spec["os_disk_size"]:
-            return {"success": False, "message": f"OS disk méret hibás: {vm.storage_profile.os_disk.disk_size_gb}"}
-
-        if vm.storage_profile.os_disk.managed_disk.storage_account_type != vm_spec["os_disk_type"]:
-            return {"success": False, "message": f"Disk típusa hibás: {vm.storage_profile.os_disk.managed_disk.storage_account_type}"}
-
-        image = vm.storage_profile.image_reference
-        expected_image = vm_spec["image"]
-        logging.info(f"Expected image: {expected_image}")
-        for key in ["publisher", "offer", "sku", "version"]:
-            if getattr(image, key) != expected_image[key]:
-                return {"success": False, "message": f"VM image {key} hibás: {getattr(image, key)}"}
-
-        
-        if vm.storage_profile.os_disk.os_type != vm_spec["os_type"]:
-            return {"success": False, "message": f"OS típus hibás: {vm.storage_profile.os_disk.os_type}"}
+            return {
+                "success": False,
+                "message": f"VM nem található a resource groupban '{resource_group}'.",
+            }
 
         # ✅ VNet ellenőrzés
         vnet_spec = checks["vnet"]
         try:
-            vnet = network.virtual_networks.get(resource_group, vnet_spec["name"])
-        except ResourceNotFoundError:
-            return {"success": False, "message": f"VNet '{vnet_spec['name']}' nem található a resource groupban '{resource_group}'."}
+            # Listázd az összes VNet-et a resource groupban
+            vnets = network.virtual_networks.list(resource_group)
+            vnet = next(
+                (v for v in vnets if v.name.startswith(vnet_spec["prefix"])), None
+            )
 
-        if vnet.name != vnet_spec["name"]:
+            if not vnet:
+                return {
+                    "success": False,
+                    "message": f"Nem található olyan VNet, amely '{vnet_spec['prefix']}' prefixszel kezdődik a resource groupban '{resource_group}'.",
+                }
+        except ResourceNotFoundError:
+            return {
+                "success": False,
+                "message": f"VNet nem található a resource groupban '{resource_group}'.",
+            }
+
+        # Ellenőrizd, hogy a VNet neve helyes prefixszel kezdődik-e
+        if not vnet.name.startswith(vnet_spec["prefix"]):
             return {"success": False, "message": f"VNet neve hibás: {vnet.name}"}
 
         return {"success": True, "message": "Lab sikeresen ellenőrizve."}
