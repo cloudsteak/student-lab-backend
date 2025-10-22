@@ -5,10 +5,15 @@
       "prefix": "linux-",
       "size": "Standard_B1s",
       "os_type": "Linux",
-      "count": 1
+      "count": 2
     },
     "vnet": {
       "prefix": "halozat-"
+    },
+    "lb": {
+      "prefix": "eloszto-",
+      "type": "Public",
+      "sku": "Standard"
     }
   }
 }
