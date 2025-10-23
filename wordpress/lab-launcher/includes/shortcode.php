@@ -462,6 +462,7 @@ function lab_launcher_enqueue_script()
             return;
         }
 
+        // Ha nincs start idő, akkor hibaüzenet
         if (!startTime) {
             countdownElement.innerText = `${errorMessage}`;
             return;
@@ -505,19 +506,26 @@ function lab_check_enqueue_script()
     ?>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        const countdownText = document.getElementById("lab-countdown").innerText;
+        if (countdownText === "") {
+            // Ellenőrző gomb elrejtése
+            document.getElementById("lab-check-button").style.display = "none";
+        }
         document.querySelectorAll('.lab-check-button').forEach(button => {
             button.addEventListener('click', async () => {
                 const checker = document.querySelectorAll('.lab-checker')[0];
                 const labName = checker.dataset.lab;
                 const cloudProvider = checker.dataset.cloud;
                 const username = document.getElementById("clean-username")?.textContent;
+                const cleanUsername = username?.split('@')[0]; // Extract the part before '@'
                 //const resultBox = checker.querySelector('.lab-check-result') || checker.nextElementSibling;
                 const resultBox = document.querySelectorAll('.lab-check-result')[0];
+
 
                 console.log('Ellenőrzés indítása:', { labName, cloudProvider, username });
 
                 button.disabled = true;
-        
+
 
                 try {
                     const res = await fetch('/wp-json/lab-launcher/v1/verify-lab', {
@@ -527,26 +535,26 @@ function lab_check_enqueue_script()
                         body: JSON.stringify({
                             lab_name: labName,
                             cloud_provider: cloudProvider,
-                            user: username
+                            user: cleanUsername
                         })
                     });
 
                     const data = await res.json();
 
-                    let verifyicon = "<i class='fa-solid fa-thumbs-up'></i>";
-                    let verifyclass = "success";
-
-
                     if (res.ok) {
                         if (data.success != true) {
-                            verifyicon = "<i class='fa-solid fa-triangle-exclamation'></i>";
+                            verifyicon = "<i class='fa-solid fa-triangle-exclamation fa-3x'></i>";
                             verifyclass = "error";
+                        } else {
+                            verifyicon = "<i class='fa-solid fa-square-check fa-3x'></i>";
+                            verifyclass = "success";
+                            // Ellenőrző gomb elrejtése
+                            document.getElementById("lab-check-button").style.display = "none";
                         }
                         resultBox.innerHTML =
                             `<span class=${verifyclass}>${verifyicon}</span>` +
                             `<br><p>${data.message}</p>` +
-                            `${data.success !== true ? "<p>- Javítsd ki a hibát, és próbáld újra. - </p>" : ""}
-                                                                                                                            `;
+                            `${data.success !== true ? "<p style='font-weight: 600; color: red; font-size: 16px;'><i class='fa-solid fa-triangle-exclamation'></i> Javítsd ki a hibát, és próbáld újra. <i class='fa-solid fa-triangle-exclamation'></i> </p>" : "<p style='font-weight: 800; color: #bf9b30; font-size: 22px;'><i class='fa-solid fa-trophy'></i> Gratulálok, teljesítetted a feladatot! <i class='fa-solid fa-trophy'></i></p>"}`;
                     } else {
                         resultBox.innerHTML = `<span style='color:red;'>Hiba: ${data.message || 'Ismeretlen'}</span>`;
                     }
@@ -555,16 +563,17 @@ function lab_check_enqueue_script()
                     resultBox.innerHTML = `<span style='color:red;'>Hálózati hiba vagy válasz sikertelen.</span>`;
                 } finally {
                     // Átmenetileg tiltom az újraellenőrzést
-                    // button.disabled = false;
-
-                    // Bármi van, sikeres az Ellenőrzés
-                    let verifyicon = "<i class='fa-solid fa-thumbs-up'></i>";
-                    let verifyclass = "success";
-                    resultBox.innerHTML =
-                        `<span class=${verifyclass}>${verifyicon}</span>` +
-                        `<br><p>Sikeres ellenőrzés!</p>`;
-                    // Ellenőrző gomb elrejtése
-                    document.getElementById("lab-check-button").style.display = "none";
+                    button.disabled = false;
+                    // Azure Portal lab esetén mindig sikeres az ellenőrzés
+                    if (labName === 'mk-7-01-portal') {
+                        let verifyicon = "<i class='fa-solid fa-square-check fa-3x'></i>";
+                        let verifyclass = "success";
+                        resultBox.innerHTML =
+                            `<span class=${verifyclass}>${verifyicon}</span>` +
+                            `<br><p>Sikeres ellenőrzés!</p>`;
+                        // Ellenőrző gomb elrejtése
+                        document.getElementById("lab-check-button").style.display = "none";
+                    }
                 }
             });
         });

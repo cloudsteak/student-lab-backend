@@ -3,7 +3,7 @@
 Plugin Name: Lab Launcher (CloudMentor)
 Plugin URI: https://github.com/the1bit/student-lab-backend/tree/main/wordpress/lab-launcher
 Description: WordPress plugin a CloudMentor Lab indításhoz (Azure, AWS).
-Version: 1.0.3
+Version: 1.1.0
 Author: CloudMentor
 Author URI: https://cloudmentor.hu
 License: MIT
@@ -33,6 +33,8 @@ function lab_launcher_init()
     require_once plugin_dir_path(__FILE__) . 'includes/settings.php';
     require_once plugin_dir_path(__FILE__) . 'admin/courses-page.php';
     require_once plugin_dir_path(__FILE__) . 'admin/lab-launch-shortcode.php';
+    require_once plugin_dir_path(__FILE__) . 'admin/user-statuses-page.php';
+
 
 
 }
