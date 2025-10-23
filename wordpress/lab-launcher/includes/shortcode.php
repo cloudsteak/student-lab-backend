@@ -462,6 +462,7 @@ function lab_launcher_enqueue_script()
             return;
         }
 
+        // Ha nincs start idő, akkor hibaüzenet
         if (!startTime) {
             countdownElement.innerText = `${errorMessage}`;
             return;
@@ -505,6 +506,11 @@ function lab_check_enqueue_script()
     ?>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        const countdownText = document.getElementById("lab-countdown").innerText;
+        if (countdownText === "") {
+            // Ellenőrző gomb elrejtése
+            document.getElementById("lab-check-button").style.display = "none";
+        }
         document.querySelectorAll('.lab-check-button').forEach(button => {
             button.addEventListener('click', async () => {
                 const checker = document.querySelectorAll('.lab-checker')[0];
@@ -514,6 +520,7 @@ function lab_check_enqueue_script()
                 const cleanUsername = username?.split('@')[0]; // Extract the part before '@'
                 //const resultBox = checker.querySelector('.lab-check-result') || checker.nextElementSibling;
                 const resultBox = document.querySelectorAll('.lab-check-result')[0];
+
 
                 console.log('Ellenőrzés indítása:', { labName, cloudProvider, username });
 
