@@ -58,19 +58,27 @@ function lab_launcher_labs_page()
         }
 
         $id = sanitize_text_field($_POST['lab_launcher_lab_id']);
+
+        $raw_desc = isset($_POST['description']) 
+            ? wp_unslash($_POST['description']) 
+            : '';
+
+        $clean_desc = wp_kses_post($raw_desc);
+
         $labs[$id] = array(
             'id' => $id,
-            'lab_name' => sanitize_text_field($_POST['lab_launcher_lab_name']), // amit a backend kap
-            'lab_title' => sanitize_text_field($_POST['lab_launcher_lab_title']), // amit a felhasználó lát
-            'lab_brief' => sanitize_text_field($_POST['lab_launcher_lab_brief']), // rövid leírás
-            'lab_id' => $id, // shortcode ID külön elmentve is, ha kell
+            'lab_name' => sanitize_text_field($_POST['lab_launcher_lab_name']),
+            'lab_title' => sanitize_text_field($_POST['lab_launcher_lab_title']),
+            'lab_brief' => sanitize_text_field($_POST['lab_launcher_lab_brief']),
+            'lab_id' => $id,
             'cloud' => sanitize_text_field($_POST['cloud_provider']),
-            'description' => wp_kses_post($_POST['description']),
+            'description' => $clean_desc,
             'image_id' => intval($_POST['image_id']),
             'lab_ttl' => intval($_POST['lab_launcher_ttl']) ?: 5400
         );
 
         update_option('lab_launcher_labs', $labs);
+
 
 
         echo '<div class="updated"><p>Lab sikeresen elmentve!</p></div>';
