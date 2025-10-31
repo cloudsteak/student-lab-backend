@@ -1,0 +1,11 @@
+{
+  "cloud": "azure",
+  "checks": {
+    "vm": {
+      "prefix": "windows-",
+      "size": "Standard_D2s_v3",
+      "os_type": "Windows",
+      "count": 1
+    }
+  }
+}
