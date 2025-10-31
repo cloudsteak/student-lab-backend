@@ -2,7 +2,7 @@
   "cloud": "azure",
   "checks": {
     "vm": {
-      "prefix": "windows-",
+      "prefix": "vm-",
       "size": "Standard_D2s_v3",
       "os_type": "Windows",
       "count": 1
