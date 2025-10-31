@@ -3,7 +3,11 @@
   "checks": {
     "vm": {
       "prefix": "vm-",
+<<<<<<< HEAD
       "size": "Standard_D2s_v5",
+=======
+      "size": "Standard_D2s_v3",
+>>>>>>> upstream/main
       "os_type": "Windows",
       "count": 1
     }
