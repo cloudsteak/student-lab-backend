@@ -35,7 +35,7 @@ def run_verification(user: str, lab: str, email: str, subscription_id: str) -> d
                     "message": f"Nem található elegendő Web App, amely '{webapp_spec['prefix']}' prefixszel kezdődik a resource groupban '{resource_group}'. Elvárt: {webapp_spec['count']}, Talált: {len(matching_webapps)}",
                 }
 
-            # Ellenőrizd az egyes Web App-ok runtime stack-ét és App Service Plan-ját
+            # Ellenőrizd az egyes Web App-ok Docker konfigurációját és App Service Plan-ját
             for webapp in matching_webapps:
                 # Szerezd meg a Web App konfigurációját
                 config = web_client.web_apps.get_configuration(
@@ -43,25 +43,41 @@ def run_verification(user: str, lab: str, email: str, subscription_id: str) -> d
                     name=webapp.name
                 )
 
-                # Ellenőrizd a runtime stack-et (linux_fx_version tartalmazza a stack információt)
-                actual_runtime = config.linux_fx_version if config.linux_fx_version else config.windows_fx_version
+                # Ellenőrizd, hogy Docker konténerből fut-e
+                linux_fx_version = config.linux_fx_version
                 
-                if not actual_runtime:
+                if not linux_fx_version:
                     return {
                         "success": False,
-                        "message": f"Web App '{webapp.name}' nem rendelkezik runtime stack-kel.",
+                        "message": f"Web App '{webapp.name}' nem rendelkezik Linux FX verzióval (Docker konfiguráció hiányzik).",
                     }
 
-                # Runtime stack ellenőrzés (rugalmasabb, case-insensitive)
-                expected_runtime = webapp_spec["runtime_stack"].upper()
-                actual_runtime_upper = actual_runtime.upper()
+                # Docker konténer ellenőrzés
+                # Lehetséges formátumok:
+                # 1. DOCKER|<registry>.azurecr.io/<image>:<tag> - direkt ACR image megadás
+                # 2. "sitecontainers" - Azure Deployment Center használata ACR-ből
                 
-                # Ellenőrizzük, hogy tartalmazza-e az elvárt runtime-ot
-                if expected_runtime not in actual_runtime_upper:
+                is_docker_direct = linux_fx_version.upper().startswith("DOCKER|")
+                is_sitecontainers = linux_fx_version.lower() == "sitecontainers"
+                
+                if not (is_docker_direct or is_sitecontainers):
                     return {
                         "success": False,
-                        "message": f"Web App runtime stack hibás: {webapp.name} - {actual_runtime}. Elvárt (tartalmazza): {webapp_spec['runtime_stack']}",
+                        "message": f"Web App '{webapp.name}' nem Docker konténerből fut. Linux FX Version: {linux_fx_version}",
                     }
+
+                # Ha DOCKER| prefixszel kezdődik, ellenőrizzük hogy van-e benne registry
+                if is_docker_direct:
+                    docker_image = linux_fx_version[7:]  # "DOCKER|" prefix eltávolítása
+                    
+                    # Elfogadjuk mind az ACR (.azurecr.io), mind más registry-ket
+                    if "/" not in docker_image:
+                        return {
+                            "success": False,
+                            "message": f"Web App '{webapp.name}' Docker image formátuma hibás: {docker_image}",
+                        }
+                
+                # Ha "sitecontainers", az Azure Deployment Center-t használja, ami OK
 
                 # ✅ App Service Plan SKU ellenőrzés
                 if app_service_plan_spec:
