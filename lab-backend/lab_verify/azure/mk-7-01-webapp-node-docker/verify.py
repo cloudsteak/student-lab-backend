@@ -43,30 +43,24 @@ def run_verification(user: str, lab: str, email: str, subscription_id: str) -> d
                     name=webapp.name
                 )
 
-                # Ellenőrizd, hogy Docker konténerből fut-e
-                linux_fx_version = config.linux_fx_version
+                # Ellenőrizd a runtime stack-et (linux_fx_version tartalmazza a stack információt)
+                actual_runtime = config.linux_fx_version if config.linux_fx_version else config.windows_fx_version
                 
-                if not linux_fx_version:
+                if not actual_runtime:
                     return {
                         "success": False,
-                        "message": f"Web App '{webapp.name}' nem rendelkezik Linux FX verzióval (Docker konfiguráció hiányzik).",
+                        "message": f"Web App '{webapp.name}' nem rendelkezik runtime stack-kel.",
                     }
 
-                # Docker ellenőrzés - a linux_fx_version DOCKER| prefixszel kell kezdődjön
-                if not linux_fx_version.upper().startswith("DOCKER|"):
-                    return {
-                        "success": False,
-                        "message": f"Web App '{webapp.name}' nem Docker konténerből fut. Linux FX Version: {linux_fx_version}",
-                    }
-
-                # ACR (Azure Container Registry) ellenőrzés
-                # A formátum: DOCKER|<registry>.azurecr.io/<image>:<tag>
-                docker_image = linux_fx_version[7:]  # "DOCKER|" prefix eltávolítása
+                # Runtime stack ellenőrzés (rugalmasabb, case-insensitive)
+                expected_runtime = webapp_spec["runtime_stack"].upper()
+                actual_runtime_upper = actual_runtime.upper()
                 
-                if not docker_image.endswith(".azurecr.io") and ".azurecr.io/" not in docker_image:
+                # Ellenőrizzük, hogy tartalmazza-e az elvárt runtime-ot
+                if expected_runtime not in actual_runtime_upper:
                     return {
                         "success": False,
-                        "message": f"Web App '{webapp.name}' nem Azure Container Registry-ből használ image-et. Image: {docker_image}",
+                        "message": f"Web App runtime stack hibás: {webapp.name} - {actual_runtime}. Elvárt (tartalmazza): {webapp_spec['runtime_stack']}",
                     }
 
                 # ✅ App Service Plan SKU ellenőrzés
