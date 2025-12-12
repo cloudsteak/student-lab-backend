@@ -2,15 +2,9 @@ name: Backend - Manual Production Build
 
 on:
   workflow_dispatch:
-    inputs:
-      tag_version:
-        description: 'Select one of the last 3 tags'
-        required: true
-        type: string
 
 jobs:
   prod-build:
-    uses: cloudsteak/cm-workflows/.github/workflows/production-build-push.yml@1.2.0
+    uses: cloudsteak/cm-workflows/.github/workflows/production-build-push.yml@1.2.1
     with:
-      tag_version: ${{ inputs.tag_version }}
       image_name: lab-backend

@@ -1,4 +1,4 @@
-name: Build & Push Lab Cleanup Trigger
+name: Cleanup - Staging Build & Push
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    uses: cloudsteak/cm-workflows/.github/workflows/staging-build-push.yml@1.2.0
+    uses: cloudsteak/cm-workflows/.github/workflows/staging-build-push.yml@1.2.1
     with:
       image_name: lab-cleanup-trigger
       build_context: ./lab-cleanup-trigger
