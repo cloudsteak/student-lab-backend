@@ -5,6 +5,6 @@ on:
 
 jobs:
   prod-build:
-    uses: cloudsteak/cm-workflows/.github/workflows/production-build-push.yml@1.2.1
+    uses: cloudsteak/cm-workflows/.github/workflows/production-build-push.yml@1.2.2
     with:
       image_name: lab-backend
