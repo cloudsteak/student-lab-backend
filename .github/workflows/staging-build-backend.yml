@@ -13,6 +13,6 @@ on:
 
 jobs:
   build:
-    uses: cloudsteak/cm-workflows/.github/workflows/docker-build.yml@main
+    uses: cloudsteak/cm-workflows/.github/workflows/staging-build-push.yml@1.2.0
     with:
       image_name: lab-backend
