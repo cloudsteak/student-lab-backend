@@ -18,4 +18,3 @@ jobs:
     with:
       release_type: ${{ inputs.release_type }}
       branch: main
-      scripts_version: '1.0.0'
