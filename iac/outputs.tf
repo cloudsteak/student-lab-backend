@@ -1,7 +1,7 @@
 # --- outputs.tf ---
 
 output "backend_url" {
-  value = "https://lab-backend.cloudmentor.hu"
+  value = "https://evolvia-backend.cloudmentor.hu"
 }
 
 output "internal_secret_value" {
