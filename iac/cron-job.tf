@@ -1,14 +1,14 @@
-resource "kubernetes_namespace" "cron_ns" {
+resource "kubernetes_namespace_v1" "cron_ns" {
   metadata {
     name = "cron-jobs"
   }
 }
 
 
-resource "kubernetes_secret" "cronjob_cleanup_secrets" {
+resource "kubernetes_secret_v1" "cronjob_cleanup_secrets" {
   metadata {
     name      = "lab-cleanup-secret"
-    namespace = kubernetes_namespace.cron_ns.metadata[0].name
+    namespace = kubernetes_namespace_v1.cron_ns.metadata[0].name
   }
   data = {
     BACKEND_URL     = var.backend_url
@@ -17,10 +17,10 @@ resource "kubernetes_secret" "cronjob_cleanup_secrets" {
   type = "Opaque"
 }
 
-resource "kubernetes_secret" "ghcr_auth_cron" {
+resource "kubernetes_secret_v1" "ghcr_auth_cron" {
   metadata {
     name      = "ghcr-auth"
-    namespace = kubernetes_namespace.cron_ns.metadata[0].name
+    namespace = kubernetes_namespace_v1.cron_ns.metadata[0].name
   }
   type = "kubernetes.io/dockerconfigjson"
   data = {
@@ -38,7 +38,7 @@ resource "kubernetes_secret" "ghcr_auth_cron" {
 resource "kubernetes_cron_job_v1" "lab_cleanup" {
   metadata {
     name      = "backend-lab-cleanup"
-    namespace = kubernetes_namespace.cron_ns.metadata[0].name
+    namespace = kubernetes_namespace_v1.cron_ns.metadata[0].name
     labels = {
       app = "lab-cleanup-trigger"
     }
@@ -66,7 +66,7 @@ resource "kubernetes_cron_job_v1" "lab_cleanup" {
 
           spec {
             image_pull_secrets {
-              name = kubernetes_secret.ghcr_auth_cron.metadata[0].name
+              name = kubernetes_secret_v1.ghcr_auth_cron.metadata[0].name
             }
             restart_policy = "OnFailure"
 
@@ -79,7 +79,7 @@ resource "kubernetes_cron_job_v1" "lab_cleanup" {
                 name = "INTERNAL_SECRET"
                 value_from {
                   secret_key_ref {
-                    name = kubernetes_secret.cronjob_cleanup_secrets.metadata[0].name
+                    name = kubernetes_secret_v1.cronjob_cleanup_secrets.metadata[0].name
                     key  = "INTERNAL_SECRET"
                   }
                 }
@@ -91,7 +91,7 @@ resource "kubernetes_cron_job_v1" "lab_cleanup" {
                 name = "BACKEND_URL"
                 value_from {
                   secret_key_ref {
-                    name = kubernetes_secret.cronjob_cleanup_secrets.metadata[0].name
+                    name = kubernetes_secret_v1.cronjob_cleanup_secrets.metadata[0].name
                     key  = "BACKEND_URL"
                   }
                 }
