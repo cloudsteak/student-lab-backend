@@ -3,44 +3,15 @@ name: Build & Push Lab Cleanup Trigger
 on:
   push:
     branches:
-      - 'main'
+      - "main"
     paths:
-      - 'lab-cleanup-trigger/**'
-      - '.github/workflows/docker-build-lab-cleanup.yml'
-  
+      - "lab-cleanup-trigger/**"
+      - ".github/workflows/docker-build-lab-cleanup.yml"
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    permissions:
-      packages: write
-      contents: read
-
-    steps:
-      - name: Checkout PR branch
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract short SHA
-        id: vars
-        run: echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
-
-      - name: Build and push image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./lab-cleanup-trigger
-          file: ./lab-cleanup-trigger/Dockerfile
-          platforms: linux/amd64
-          push: true
-          tags: |
-            ghcr.io/cloudsteak/lab-cleanup-trigger:latest
-            ghcr.io/cloudsteak/lab-cleanup-trigger:${{ steps.vars.outputs.SHORT_SHA }}
+    uses: cloudsteak/cm-workflows/.github/workflows/docker-build.yml@main
+    with:
+      image_name: lab-cleanup-trigger
+      build_context: ./lab-cleanup-trigger
+      dockerfile_path: ./lab-cleanup-trigger/Dockerfile
