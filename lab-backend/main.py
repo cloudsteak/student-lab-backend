@@ -16,11 +16,15 @@ import httpx
 from datetime import datetime
 from fastapi.responses import JSONResponse
 import logging
+from azure_helpers import configure_azure_sdk_logging
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s"
 )
+
+# Configure Azure SDK logging
+configure_azure_sdk_logging()
 
 app = FastAPI(docs_url="/docs", redoc_url=None)
 security = HTTPBearer()
@@ -289,6 +293,8 @@ def verify_lab_endpoint(request: VerifyRequest, token: dict = Depends(verify_tok
     if not subscription_id:
         raise HTTPException(status_code=500, detail="Missing AZURE_SUBSCRIPTION_ID")
 
+    logging.info(f"Starting lab verification for user={request.user}, cloud={request.cloud}, lab={request.lab}")
+    
     try:
         result = verify_lab(
             user=request.user,
@@ -297,6 +303,8 @@ def verify_lab_endpoint(request: VerifyRequest, token: dict = Depends(verify_tok
             lab=request.lab,
             subscription_id=subscription_id
         )
+        logging.info(f"Lab verification completed for user={request.user}, success={result.get('success')}")
         return result
     except Exception as e:
+        logging.error(f"Lab verification failed for user={request.user}: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
